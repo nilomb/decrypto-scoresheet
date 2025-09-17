@@ -2,181 +2,139 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <!-- Prevent zoom on input focus -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+
+  <!-- iOS fullscreen PWA settings -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>Decrypto Style Pages</title>
+
+  <!-- PWA manifest + theme -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#333333">
+  <link rel="apple-touch-icon" href="icon-192.png">
+
+  <title>Decrypto Scoresheet</title>
   <style>
     body {
       margin: 0;
-      font-family: sans-serif;
-      height: 100dvh;
-      overflow-x: hidden;   /* only hide horizontal */
-      overflow-y: auto;     /* allow vertical scroll when keyboard shows */
-      display: flex;
-      flex-direction: column;
-      padding-bottom: env(safe-area-inset-bottom);
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
     }
-
     .page-wrapper {
-      flex: 1;
+      width: 100%;
+      height: 100vh;
+      overflow: hidden;
       position: relative;
     }
-
     .page-container {
       display: flex;
-      width: 800%; /* 8 pages */
+      flex-direction: row;
       height: 100%;
-      transition: margin-left 0.3s ease; /* changed from transform */
+      transition: transform 0.3s ease;
+      will-change: transform;
     }
-
     .page {
-      width: 12.5%; /* 100 / 8 */
+      min-width: 100%;
       height: 100%;
-      flex-shrink: 0;
+      box-sizing: border-box;
+      padding: 10px;
       display: flex;
       flex-direction: column;
-    }
-
-    /* Top box */
-    .top-box {
-      width: 100%;
-      background: #f0f0f0;
-      padding: 10px;
-      box-sizing: border-box;
-    }
-    body.them .top-box {
-      background: #ddd;
-      color: #000;
-    }
-
-    .nav-row {
-      display: flex;
       justify-content: space-between;
-      margin-bottom: 10px;
     }
-
-    .page-nav {
-      display: flex;
-      gap: 6px;
-    }
-    .page-nav button {
-      background: #ccc;
-      border: none;
-      padding: 4px 8px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 16px;
-      transition: background 0.3s, color 0.3s;
-    }
-    .page-nav button.active {
-      background: #333;
-      color: #fff;
-      font-weight: bold;
-    }
-
     .mode-nav {
       display: flex;
-      gap: 6px;
+      justify-content: center;
+      margin: 5px;
     }
     .mode-nav button {
-      padding: 4px 8px;
-      border: none;
+      padding: 6px 10px;
+      margin: 0 4px;
+      font-size: 14px;
       border-radius: 6px;
+      border: none;
+      background: #ddd;
       cursor: pointer;
-      font-size: 16px;
-      background: #ccc;
-      transition: background 0.3s, color 0.3s;
     }
     .mode-nav button.active {
       background: #333;
       color: #fff;
     }
-
-    .row {
+    .nav {
       display: flex;
       justify-content: space-between;
-      margin-bottom: 8px;
+      margin-bottom: 5px;
     }
-
-    .row input[type="text"] {
-      flex: 1;
-      margin-right: 8px;
-      padding: 6px;
+    .nav button {
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: none;
+      background: #ccc;
+      cursor: pointer;
     }
-    .row input[type="number"] {
-      width: 50px;
-      padding: 6px;
-      margin-left: 4px;
-    }
-
-    .grid {
-      flex: 1;
+    .panels {
+      flex-grow: 1;
       display: grid;
       grid-template-columns: 1fr 1fr;
       grid-template-rows: 1fr 1fr;
       gap: 8px;
-      padding: 8px;
-      box-sizing: border-box;
     }
-
     .panel {
-      display: flex;
-      flex-direction: column;
+      background: #fff;
       border: 1px solid #ccc;
       border-radius: 8px;
-      overflow: hidden;
-      background: #fff;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
     }
-
-    .panel-top {
-      flex: 1;
-      padding: 6px;
-      overflow-y: auto;
+    .panel h3 {
+      margin: 0 0 5px 0;
+      font-size: 14px;
     }
-    .panel-top ul {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-    }
-    .panel-top li {
-      padding: 2px 0;
-      border-bottom: 1px solid #eee;
-      font-size: 16px;
-    }
-
-    .panel-bottom {
-      border-top: 1px solid #ddd;
+    .panel input[type=text] {
       padding: 4px;
-      background: #fafafa;
-      max-height: 80px;
-      overflow-y: auto;
+      font-size: 16px;
+      width: 100%;
+      margin-bottom: 4px;
+      box-sizing: border-box;
     }
-
+    .panel select {
+      padding: 2px;
+      margin-bottom: 4px;
+    }
+    .collected {
+      flex-grow: 1;
+      overflow-y: auto;
+      font-size: 13px;
+    }
+    .panel-bottom {
+      margin-top: 6px;
+    }
     .input-wrapper {
       display: flex;
       align-items: center;
-      margin-bottom: 4px;
-      gap: 4px; /* spacing between input and button */
+      margin-top: 4px;
     }
-    .input-wrapper input {
-      flex: 1;
-      min-width: 0; /* prevents button overflow */
-      padding: 4px;
-      font-size: 16px;
+    .input-wrapper span {
+      flex-grow: 1;
+      font-size: 14px;
+      padding: 2px 4px;
     }
-    .input-wrapper .toggle-btn {
-      flex: 0 0 auto; /* keep button visible */
-    }
-
     .toggle-btn {
+      margin-left: 4px;
       padding: 2px 6px;
-      font-size: 16px;
+      border: none;
+      border-radius: 4px;
+      background: #ddd;
       cursor: pointer;
     }
-
     .strikethrough {
       text-decoration: line-through;
+      color: #888;
     }
   </style>
 </head>
@@ -187,149 +145,168 @@
   </div>
 
   <script>
-    const collectedWords = { us: [[], [], [], []], them: [[], [], [], []] };
-    const manualNotes = { us: [[], [], [], []], them: [[], [], [], []] };
+    let currentPage = 0;
+    let currentMode = 'us';
+    const lastPageByMode = { us: 0, them: 0 };
+    const totalPages = 8;
 
-    function createTopBox(pageIndex, containerId) {
-      const topBox = document.createElement('div');
-      topBox.className = 'top-box';
-
-      const navRow = document.createElement('div');
-      navRow.className = 'nav-row';
-
-      const pageNav = document.createElement('div');
-      pageNav.className = 'page-nav';
-      for (let i = 0; i < 8; i++) {
-        const btn = document.createElement('button');
-        btn.textContent = i + 1;
-        if (i === 0 && pageIndex === 1 && containerId === "usPages") btn.classList.add('active');
-        btn.addEventListener('click', () => {
-          currentPage = i;
-          updatePagePosition();
-          updateAllNavs();
-          updateAllPanels();
-          updateAllNotes();
-        });
-        pageNav.appendChild(btn);
-      }
-
-      const modeNav = document.createElement('div');
-      modeNav.className = 'mode-nav';
-      const usBtn = document.createElement('button');
-      usBtn.textContent = "US";
-      if (containerId === "usPages") usBtn.classList.add('active');
-      usBtn.addEventListener('click', () => switchMode('us'));
-      const themBtn = document.createElement('button');
-      themBtn.textContent = "THEM";
-      if (containerId === "themPages") themBtn.classList.add('active');
-      themBtn.addEventListener('click', () => switchMode('them'));
-      modeNav.appendChild(usBtn);
-      modeNav.appendChild(themBtn);
-
-      navRow.appendChild(pageNav);
-      navRow.appendChild(modeNav);
-      topBox.appendChild(navRow);
-
-      for (let i = 0; i < 3; i++) {
-        const row = document.createElement('div');
-        row.className = 'row';
-
-        const textInput = document.createElement('input');
-        textInput.type = 'text';
-        textInput.placeholder = 'Word';
-        row.appendChild(textInput);
-
-        const numberInput1 = document.createElement('input');
-        numberInput1.type = 'number';
-        numberInput1.min = 1;
-        numberInput1.max = 4;
-        row.appendChild(numberInput1);
-
-        const numberInput2 = document.createElement('input');
-        numberInput2.type = 'number';
-        numberInput2.min = 1;
-        numberInput2.max = 4;
-        row.appendChild(numberInput2);
-
-        numberInput2.addEventListener('change', () => {
-          const word = textInput.value.trim();
-          const panelIndex = parseInt(numberInput2.value) - 1;
-          if (word && panelIndex >= 0 && panelIndex < 4) {
-            collectedWords[currentMode][panelIndex].push({ word, fromPage: currentPage });
-            updateAllPanels();
-          }
-        });
-
-        topBox.appendChild(row);
-      }
-      return topBox;
-    }
-
-    function createGrid(pageIndex) {
-      const grid = document.createElement('div');
-      grid.className = 'grid';
-      for (let i = 0; i < 4; i++) {
-        const panel = document.createElement('div');
-        panel.className = 'panel';
-
-        const panelTop = document.createElement('div');
-        panelTop.className = 'panel-top';
-        const ul = document.createElement('ul');
-        panelTop.appendChild(ul);
-
-        const panelBottom = document.createElement('div');
-        panelBottom.className = 'panel-bottom';
-        panelBottom.dataset.panelIndex = i;
-        grid.appendChild(panel);
-
-        panel.appendChild(panelTop);
-        panel.appendChild(panelBottom);
-      }
-      return grid;
-    }
+    const collectedWords = { us: [[],[],[],[]], them: [[],[],[],[]] };
+    const manualNotes = { us: [[],[],[],[]], them: [[],[],[],[]] };
 
     function buildPages(containerId) {
       const container = document.getElementById(containerId);
-      container.innerHTML = '';
-      for (let p = 1; p <= 8; p++) {
+      for (let i=0;i<totalPages;i++) {
         const page = document.createElement('div');
         page.className = 'page';
-        page.appendChild(createTopBox(p, containerId));
-        page.appendChild(createGrid(p - 1));
+
+        // Mode nav
+        const modeNav = document.createElement('div');
+        modeNav.className = 'mode-nav';
+        const usBtn = document.createElement('button');
+        usBtn.textContent = 'US';
+        usBtn.onclick = () => switchMode('us');
+        const themBtn = document.createElement('button');
+        themBtn.textContent = 'THEM';
+        themBtn.onclick = () => switchMode('them');
+        modeNav.appendChild(usBtn);
+        modeNav.appendChild(themBtn);
+        page.appendChild(modeNav);
+
+        // Page nav
+        const nav = document.createElement('div');
+        nav.className = 'nav';
+        const prevBtn = document.createElement('button');
+        prevBtn.textContent = '◀';
+        prevBtn.onclick = () => changePage(-1);
+        const pageNum = document.createElement('span');
+        pageNum.className = 'page-num';
+        pageNum.textContent = `Page ${i+1}`;
+        const nextBtn = document.createElement('button');
+        nextBtn.textContent = '▶';
+        nextBtn.onclick = () => changePage(1);
+        nav.appendChild(prevBtn);
+        nav.appendChild(pageNum);
+        nav.appendChild(nextBtn);
+        page.appendChild(nav);
+
+        // Panels
+        const panels = document.createElement('div');
+        panels.className = 'panels';
+        for (let j=0;j<4;j++) {
+          const panel = document.createElement('div');
+          panel.className = 'panel';
+          const h3 = document.createElement('h3');
+          h3.textContent = `#${j+1}`;
+          panel.appendChild(h3);
+
+          // Top input
+          const textInput = document.createElement('input');
+          textInput.type = 'text';
+          textInput.placeholder = 'Add word...';
+
+          const numberInput = document.createElement('select');
+          for (let n=1;n<=4;n++) {
+            const opt = document.createElement('option');
+            opt.value = n;
+            opt.textContent = n;
+            numberInput.appendChild(opt);
+          }
+
+          const addBtn = document.createElement('button');
+          addBtn.textContent = '✔';
+          addBtn.className = 'toggle-btn';
+
+          addBtn.onclick = () => {
+            const word = textInput.value.trim();
+            if (!word) return;
+            const panelIndex = parseInt(numberInput.value)-1;
+
+            // remove word from all panels
+            for (let k=0;k<4;k++) {
+              collectedWords[currentMode][k] =
+                collectedWords[currentMode][k].filter(item => item.word !== word);
+            }
+            // add to correct panel
+            collectedWords[currentMode][panelIndex].push({ word, fromPage: currentPage });
+            textInput.value = '';
+            updateAllPanels();
+          };
+
+          numberInput.onchange = () => {
+            const word = textInput.value.trim();
+            const panelIndex = parseInt(numberInput.value)-1;
+            if (!word) return;
+            for (let k=0;k<4;k++) {
+              collectedWords[currentMode][k] =
+                collectedWords[currentMode][k].filter(item => item.word !== word);
+            }
+            collectedWords[currentMode][panelIndex].push({ word, fromPage: currentPage });
+            updateAllPanels();
+          };
+
+          panel.appendChild(textInput);
+          panel.appendChild(numberInput);
+          panel.appendChild(addBtn);
+
+          // Collected words
+          const collected = document.createElement('div');
+          collected.className = 'collected';
+          panel.appendChild(collected);
+
+          // Bottom notes
+          const panelBottom = document.createElement('div');
+          panelBottom.className = 'panel-bottom';
+          panel.appendChild(panelBottom);
+
+          const addNoteInput = document.createElement('input');
+          addNoteInput.type = 'text';
+          addNoteInput.placeholder = 'Manual note...';
+          addNoteInput.onkeydown = e => {
+            if (e.key === 'Enter') {
+              const noteText = addNoteInput.value.trim();
+              if (!noteText) return;
+              manualNotes[currentMode][j].push({ text: noteText, fromPage: currentPage, done: false });
+              addNoteInput.value = '';
+              updateAllNotes();
+            }
+          };
+          panelBottom.appendChild(addNoteInput);
+
+          panels.appendChild(panel);
+        }
+        page.appendChild(panels);
         container.appendChild(page);
       }
     }
 
-    let currentPage = 0;
-    let currentMode = 'us';
-    const lastPageByMode = { us: 0, them: 0 }; // NEW
-
     function updatePagePosition() {
-      const container = document.getElementById(currentMode + 'Pages');
-      container.style.marginLeft = `-${currentPage * 100}%`; // was transform
+      const usContainer = document.getElementById('usPages');
+      const themContainer = document.getElementById('themPages');
+      const offset = -currentPage * window.innerWidth;
+      usContainer.style.transform = `translateX(${offset}px)`;
+      themContainer.style.transform = `translateX(${offset}px)`;
     }
 
     function updateAllNavs() {
-      document.querySelectorAll('.page-nav').forEach(nav => {
-        nav.querySelectorAll('button').forEach((btn, i) => {
-          btn.classList.toggle('active', i === currentPage);
+      document.querySelectorAll('.page-container').forEach(container => {
+        container.querySelectorAll('.page').forEach((page, i) => {
+          page.querySelector('.page-num').textContent = `Page ${i+1}`;
         });
       });
     }
 
     function updateAllPanels() {
-      document.querySelectorAll(`#${currentMode}Pages .page`).forEach((page, pageIndex) => {
-        const grids = page.querySelectorAll('.grid');
-        grids.forEach(grid => {
-          grid.querySelectorAll('.panel').forEach((panel, i) => {
-            const ul = panel.querySelector('.panel-top ul');
-            ul.innerHTML = '';
-            collectedWords[currentMode][i]
+      ['us','them'].forEach(mode => {
+        document.querySelectorAll(`#${mode}Pages .page`).forEach((page, pageIndex) => {
+          page.querySelectorAll('.panel').forEach((panel, panelIndex) => {
+            const collected = panel.querySelector('.collected');
+            collected.innerHTML = '';
+            collectedWords[mode][panelIndex]
               .filter(item => item.fromPage <= pageIndex)
               .forEach(item => {
-                const li = document.createElement('li');
-                li.textContent = item.word;
-                ul.appendChild(li);
+                const div = document.createElement('div');
+                div.textContent = item.word;
+                collected.appendChild(div);
               });
           });
         });
@@ -337,131 +314,73 @@
     }
 
     function updateAllNotes() {
-      document.querySelectorAll(`#${currentMode}Pages .page`).forEach((page, pageIndex) => {
-        page.querySelectorAll('.panel-bottom').forEach((panelBottom, panelIndex) => {
-          panelBottom.innerHTML = '';
-          manualNotes[currentMode][panelIndex]
-            .filter(note => note.fromPage <= pageIndex)
-            .forEach(note => {
-              const wrapper = document.createElement('div');
-              wrapper.className = 'input-wrapper';
+      ['us','them'].forEach(mode => {
+        document.querySelectorAll(`#${mode}Pages .page`).forEach((page, pageIndex) => {
+          page.querySelectorAll('.panel').forEach((panel, panelIndex) => {
+            const panelBottom = panel.querySelector('.panel-bottom');
+            const addInput = panelBottom.querySelector('input');
+            panelBottom.innerHTML = '';
+            panelBottom.appendChild(addInput);
 
-              const input = document.createElement('input');
-              input.type = 'text';
-              input.value = note.text;
-              if (note.done) input.classList.add('strikethrough');
+            manualNotes[mode][panelIndex]
+              .filter(note => note.fromPage <= pageIndex)
+              .forEach(note => {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'input-wrapper';
 
-              const button = document.createElement('button');
-              button.textContent = '✔';
-              button.className = 'toggle-btn';
+                const span = document.createElement('span');
+                span.textContent = note.text;
+                if (note.done) span.classList.add('strikethrough');
 
-              button.addEventListener('click', () => {
-                note.done = !note.done;
-                updateAllNotes();
-              });
-
-              input.addEventListener('keydown', (e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  if (input.value.trim() === "") {
-                    manualNotes[currentMode][panelIndex] =
-                      manualNotes[currentMode][panelIndex].filter(n => n !== note);
-                  } else {
-                    note.text = input.value.trim();
-                  }
+                const checkBtn = document.createElement('button');
+                checkBtn.textContent = '✔';
+                checkBtn.className = 'toggle-btn';
+                checkBtn.onclick = () => {
+                  note.done = !note.done;
                   updateAllNotes();
-                }
-              });
+                };
 
-              input.addEventListener('blur', () => {
-                if (!input.value.trim()) {
-                  manualNotes[currentMode][panelIndex] =
-                    manualNotes[currentMode][panelIndex].filter(n => n !== note);
+                const deleteBtn = document.createElement('button');
+                deleteBtn.textContent = '✖';
+                deleteBtn.className = 'toggle-btn';
+                deleteBtn.onclick = () => {
+                  manualNotes[mode][panelIndex] =
+                    manualNotes[mode][panelIndex].filter(n => n !== note);
                   updateAllNotes();
-                }
+                };
+
+                wrapper.appendChild(span);
+                wrapper.appendChild(checkBtn);
+                wrapper.appendChild(deleteBtn);
+                panelBottom.appendChild(wrapper);
               });
-
-              wrapper.appendChild(input);
-              wrapper.appendChild(button);
-              panelBottom.appendChild(wrapper);
-            });
-
-          setupNoteInput(panelBottom, panelIndex);
+          });
         });
       });
     }
 
-    function setupNoteInput(container, panelIndex) {
-      const wrapper = document.createElement('div');
-      wrapper.className = 'input-wrapper';
-
-      const input = document.createElement('input');
-      input.type = 'text';
-      input.placeholder = 'Type here...';
-
-      const button = document.createElement('button');
-      button.textContent = '✔';
-      button.className = 'toggle-btn';
-
-      function saveNote() {
-        const text = input.value.trim();
-        if (text.length > 0) {
-          manualNotes[currentMode][panelIndex].push({
-            text,
-            fromPage: currentPage,
-            done: input.classList.contains('strikethrough')
-          });
-          updateAllNotes();
-        }
-      }
-
-      button.addEventListener('click', saveNote);
-      input.addEventListener('keydown', (e) => {
-        if (e.key === "Enter") {
-          e.preventDefault();
-          saveNote();
-        }
-      });
-      input.addEventListener('blur', () => {
-        if (!input.value.trim()) {
-          wrapper.remove();
-        }
-      });
-
-      wrapper.appendChild(input);
-      wrapper.appendChild(button);
-      container.appendChild(wrapper);
+    function changePage(direction) {
+      currentPage += direction;
+      if (currentPage < 0) currentPage = 0;
+      if (currentPage >= totalPages) currentPage = totalPages-1;
+      updatePagePosition();
     }
 
     function switchMode(mode) {
-      // remember last page before switching
       lastPageByMode[currentMode] = currentPage;
-
       if (mode === 'us') {
-        document.body.classList.remove('them');
         document.getElementById('usPages').style.display = 'flex';
         document.getElementById('themPages').style.display = 'none';
-        currentMode = 'us';
       } else {
-        document.body.classList.add('them');
         document.getElementById('usPages').style.display = 'none';
         document.getElementById('themPages').style.display = 'flex';
-        currentMode = 'them';
       }
-
-      // restore last visited page
+      currentMode = mode;
       currentPage = lastPageByMode[currentMode] || 0;
-
       updatePagePosition();
       updateAllNavs();
       updateAllPanels();
       updateAllNotes();
-
-      document.querySelectorAll('.mode-nav button').forEach(btn => btn.classList.remove('active'));
-      document.querySelectorAll('.mode-nav').forEach(nav => {
-        if (mode === 'us') nav.querySelector('button:first-child').classList.add('active');
-        else nav.querySelector('button:last-child').classList.add('active');
-      });
     }
 
     window.addEventListener('DOMContentLoaded', () => {
@@ -472,6 +391,13 @@
       updateAllPanels();
       updateAllNotes();
     });
+
+    // ✅ Register Service Worker for PWA
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js').catch(err => {
+        console.error('Service Worker failed:', err);
+      });
+    }
   </script>
 </body>
 </html>
