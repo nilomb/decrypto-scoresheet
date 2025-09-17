@@ -10,10 +10,11 @@
     body {
       margin: 0;
       font-family: sans-serif;
-      height: 100vh;
+      height: 100dvh; /* dynamic viewport height for iOS */
       overflow: hidden;
       display: flex;
       flex-direction: column;
+      padding-bottom: env(safe-area-inset-bottom); /* prevent Safari overlay */
     }
 
     .page-wrapper {
@@ -36,14 +37,13 @@
       flex-direction: column;
     }
 
-    /* Top box of each page */
+    /* Top box */
     .top-box {
       width: 100%;
       background: #f0f0f0;
       padding: 10px;
       box-sizing: border-box;
     }
-
     body.them .top-box {
       background: #ddd;
       color: #000;
@@ -55,7 +55,6 @@
       margin-bottom: 10px;
     }
 
-    /* Page nav buttons */
     .page-nav {
       display: flex;
       gap: 6px;
@@ -75,7 +74,6 @@
       font-weight: bold;
     }
 
-    /* US/THEM toggle */
     .mode-nav {
       display: flex;
       gap: 6px;
@@ -105,14 +103,12 @@
       margin-right: 8px;
       padding: 6px;
     }
-
     .row input[type="number"] {
       width: 50px;
       padding: 6px;
       margin-left: 4px;
     }
 
-    /* Bottom section with 4 panels */
     .grid {
       flex: 1;
       display: grid;
@@ -137,7 +133,6 @@
       padding: 6px;
       overflow-y: auto;
     }
-
     .panel-top ul {
       list-style: none;
       padding: 0;
@@ -162,7 +157,6 @@
       align-items: center;
       margin-bottom: 4px;
     }
-
     .input-wrapper input {
       flex: 1;
       padding: 4px;
@@ -188,27 +182,16 @@
   </div>
 
   <script>
-    // Words storage: track words with page index
-    const collectedWords = {
-      us: [[], [], [], []], // each = [{ word, fromPage }]
-      them: [[], [], [], []]
-    };
-
-    // Manual notes, cascading like top lists
-    const manualNotes = {
-      us: [[], [], [], []], // each = [{ text, fromPage, done }]
-      them: [[], [], [], []]
-    };
+    const collectedWords = { us: [[], [], [], []], them: [[], [], [], []] };
+    const manualNotes = { us: [[], [], [], []], them: [[], [], [], []] };
 
     function createTopBox(pageIndex, containerId) {
       const topBox = document.createElement('div');
       topBox.className = 'top-box';
 
-      // Nav row
       const navRow = document.createElement('div');
       navRow.className = 'nav-row';
 
-      // Page numbers
       const pageNav = document.createElement('div');
       pageNav.className = 'page-nav';
       for (let i = 0; i < 8; i++) {
@@ -225,7 +208,6 @@
         pageNav.appendChild(btn);
       }
 
-      // Mode buttons
       const modeNav = document.createElement('div');
       modeNav.className = 'mode-nav';
       const usBtn = document.createElement('button');
@@ -243,7 +225,6 @@
       navRow.appendChild(modeNav);
       topBox.appendChild(navRow);
 
-      // Word rows
       for (let i = 0; i < 3; i++) {
         const row = document.createElement('div');
         row.className = 'row';
@@ -269,21 +250,17 @@
           const word = textInput.value.trim();
           const panelIndex = parseInt(numberInput2.value) - 1;
           if (word && panelIndex >= 0 && panelIndex < 4) {
-            collectedWords[currentMode][panelIndex].push({
-              word,
-              fromPage: currentPage
-            });
+            collectedWords[currentMode][panelIndex].push({ word, fromPage: currentPage });
             updateAllPanels();
           }
         });
 
         topBox.appendChild(row);
       }
-
       return topBox;
     }
 
-    function createGrid() {
+    function createGrid(pageIndex) {
       const grid = document.createElement('div');
       grid.className = 'grid';
       for (let i = 0; i < 4; i++) {
@@ -297,45 +274,13 @@
 
         const panelBottom = document.createElement('div');
         panelBottom.className = 'panel-bottom';
-
-        setupNoteInput(panelBottom, i);
+        panelBottom.dataset.panelIndex = i;
+        grid.appendChild(panel);
 
         panel.appendChild(panelTop);
         panel.appendChild(panelBottom);
-        grid.appendChild(panel);
       }
       return grid;
-    }
-
-    function setupNoteInput(container, panelIndex) {
-      // Create one empty input for new notes
-      const wrapper = document.createElement('div');
-      wrapper.className = 'input-wrapper';
-
-      const input = document.createElement('input');
-      input.type = 'text';
-      input.placeholder = 'Type here...';
-
-      const button = document.createElement('button');
-      button.textContent = '✔';
-      button.className = 'toggle-btn';
-
-      button.addEventListener('click', () => {
-        if (input.value.trim().length > 0) {
-          manualNotes[currentMode][panelIndex].push({
-            text: input.value.trim(),
-            fromPage: currentPage,
-            done: input.classList.contains('strikethrough')
-          });
-          input.value = '';
-          input.classList.remove('strikethrough');
-          updateAllNotes();
-        }
-      });
-
-      wrapper.appendChild(input);
-      wrapper.appendChild(button);
-      container.appendChild(wrapper);
     }
 
     function buildPages(containerId) {
@@ -344,9 +289,8 @@
       for (let p = 1; p <= 8; p++) {
         const page = document.createElement('div');
         page.className = 'page';
-        page.dataset.pageIndex = p - 1;
         page.appendChild(createTopBox(p, containerId));
-        page.appendChild(createGrid());
+        page.appendChild(createGrid(p - 1));
         container.appendChild(page);
       }
     }
@@ -368,30 +312,29 @@
     }
 
     function updateAllPanels() {
-      document.querySelectorAll(`#${currentMode}Pages .page`).forEach(page => {
-        const pageIndex = parseInt(page.dataset.pageIndex, 10);
-        page.querySelectorAll('.grid .panel').forEach((panel, i) => {
-          const ul = panel.querySelector('.panel-top ul');
-          ul.innerHTML = '';
-          collectedWords[currentMode][i]
-            .filter(item => item.fromPage <= pageIndex)
-            .forEach(item => {
-              const li = document.createElement('li');
-              li.textContent = item.word;
-              ul.appendChild(li);
-            });
+      document.querySelectorAll(`#${currentMode}Pages .page`).forEach((page, pageIndex) => {
+        const grids = page.querySelectorAll('.grid');
+        grids.forEach(grid => {
+          grid.querySelectorAll('.panel').forEach((panel, i) => {
+            const ul = panel.querySelector('.panel-top ul');
+            ul.innerHTML = '';
+            collectedWords[currentMode][i]
+              .filter(item => item.fromPage <= pageIndex)
+              .forEach(item => {
+                const li = document.createElement('li');
+                li.textContent = item.word;
+                ul.appendChild(li);
+              });
+          });
         });
       });
     }
 
     function updateAllNotes() {
-      document.querySelectorAll(`#${currentMode}Pages .page`).forEach(page => {
-        const pageIndex = parseInt(page.dataset.pageIndex, 10);
-        page.querySelectorAll('.grid .panel').forEach((panel, i) => {
-          const container = panel.querySelector('.panel-bottom');
-          container.innerHTML = '';
-
-          manualNotes[currentMode][i]
+      document.querySelectorAll(`#${currentMode}Pages .page`).forEach((page, pageIndex) => {
+        page.querySelectorAll('.panel-bottom').forEach((panelBottom, panelIndex) => {
+          panelBottom.innerHTML = '';
+          manualNotes[currentMode][panelIndex]
             .filter(note => note.fromPage <= pageIndex)
             .forEach(note => {
               const wrapper = document.createElement('div');
@@ -407,24 +350,82 @@
               button.className = 'toggle-btn';
 
               button.addEventListener('click', () => {
-                input.classList.toggle('strikethrough');
-                note.done = input.classList.contains('strikethrough');
+                note.done = !note.done;
                 updateAllNotes();
               });
 
+              input.addEventListener('keydown', (e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  if (input.value.trim() === "") {
+                    manualNotes[currentMode][panelIndex] =
+                      manualNotes[currentMode][panelIndex].filter(n => n !== note);
+                  } else {
+                    note.text = input.value.trim();
+                  }
+                  updateAllNotes();
+                }
+              });
+
               input.addEventListener('blur', () => {
-                note.text = input.value;
+                if (!input.value.trim()) {
+                  manualNotes[currentMode][panelIndex] =
+                    manualNotes[currentMode][panelIndex].filter(n => n !== note);
+                  updateAllNotes();
+                }
               });
 
               wrapper.appendChild(input);
               wrapper.appendChild(button);
-              container.appendChild(wrapper);
+              panelBottom.appendChild(wrapper);
             });
 
-          // Add one empty input for new notes
-          setupNoteInput(container, i);
+          // add new input at bottom
+          setupNoteInput(panelBottom, panelIndex);
         });
       });
+    }
+
+    function setupNoteInput(container, panelIndex) {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'input-wrapper';
+
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.placeholder = 'Type here...';
+
+      const button = document.createElement('button');
+      button.textContent = '✔';
+      button.className = 'toggle-btn';
+
+      function saveNote() {
+        const text = input.value.trim();
+        if (text.length > 0) {
+          manualNotes[currentMode][panelIndex].push({
+            text,
+            fromPage: currentPage,
+            done: input.classList.contains('strikethrough')
+          });
+          updateAllNotes();
+        }
+      }
+
+      button.addEventListener('click', saveNote);
+      input.addEventListener('keydown', (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          saveNote();
+        }
+      });
+      input.addEventListener('blur', () => {
+        if (!input.value.trim()) {
+          wrapper.remove();
+        }
+      });
+
+      wrapper.appendChild(input);
+      wrapper.appendChild(button);
+      container.appendChild(wrapper);
     }
 
     function switchMode(mode) {
@@ -460,6 +461,7 @@
       updateAllNotes();
     });
 
+    // Swipe
     let startX = 0;
     window.addEventListener('touchstart', (e) => {
       startX = e.touches[0].clientX;
@@ -475,6 +477,14 @@
       updateAllNavs();
       updateAllPanels();
       updateAllNotes();
+    });
+
+    // iOS keyboard fix
+    document.addEventListener('focusin', () => {
+      document.body.style.overflow = 'visible';
+    });
+    document.addEventListener('focusout', () => {
+      document.body.style.overflow = 'hidden';
     });
   </script>
 </body>
