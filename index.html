@@ -1,96 +1,178 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>Pages — fixed</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Decrypto Style Pages</title>
   <style>
-    :root { box-sizing: border-box; }
-    *, *::before, *::after { box-sizing: inherit; }
-
     body {
       margin: 0;
-      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-      height: 100dvh;                /* use dynamic vh on mobile */
-      overflow-x: hidden;            /* prevent horizontal scroll */
-      overflow-y: auto;              /* allow vertical scroll when keyboard opens */
-      -webkit-text-size-adjust: 100%;
-      -webkit-font-smoothing: antialiased;
-      padding-bottom: env(safe-area-inset-bottom);
+      font-family: sans-serif;
+      height: 100dvh; /* dynamic viewport height for iOS */
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      padding-bottom: env(safe-area-inset-bottom); /* prevent Safari overlay */
     }
 
     .page-wrapper {
       flex: 1;
-      display: flex;
       position: relative;
-      height: 100%;
-      overflow: visible; /* allow keyboard to push content */
     }
 
-    /* container holds 8 pages in a row */
     .page-container {
       display: flex;
-      width: calc(100% * 8); /* 8 pages */
+      width: 800%; /* 8 pages */
       height: 100%;
-      transition: margin-left 0.28s ease;
-      margin: 0;
+      transition: transform 0.3s ease;
     }
 
-    /* Each page takes full viewport width */
     .page {
-      flex: 0 0 100%;
-      width: 100%;
+      width: 12.5%; /* 100 / 8 */
       height: 100%;
+      flex-shrink: 0;
       display: flex;
       flex-direction: column;
-      overflow-y: auto;                /* page can scroll vertically */
-      -webkit-overflow-scrolling: touch;
-      touch-action: pan-y;            /* let vertical pan go to page */
-      background: #f8f8f8;
     }
 
+    /* Top box */
     .top-box {
-      padding: 10px;
+      width: 100%;
       background: #f0f0f0;
+      padding: 10px;
+      box-sizing: border-box;
     }
-    body.them .top-box { background: #ddd; color: #000; }
+    body.them .top-box {
+      background: #ddd;
+      color: #000;
+    }
 
-    .nav-row { display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:10px; }
+    .nav-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
 
-    .page-nav { display:flex; gap:6px; flex-wrap:wrap; }
+    .page-nav {
+      display: flex;
+      gap: 6px;
+    }
     .page-nav button {
-      background:#ccc; border:0; padding:6px 8px; border-radius:6px; cursor:pointer;
-      font-size:14px;
+      background: #ccc;
+      border: none;
+      padding: 4px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background 0.3s, color 0.3s;
     }
-    .page-nav button.active { background:#333; color:#fff; font-weight:600; }
+    .page-nav button.active {
+      background: #333;
+      color: #fff;
+      font-weight: bold;
+    }
 
-    .mode-nav { display:flex; gap:6px; }
-    .mode-nav button { padding:6px 8px; border-radius:6px; border:0; cursor:pointer; background:#ccc; }
-    .mode-nav button.active { background:#333; color:#fff; }
+    .mode-nav {
+      display: flex;
+      gap: 6px;
+    }
+    .mode-nav button {
+      padding: 4px 8px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      background: #ccc;
+      transition: background 0.3s, color 0.3s;
+    }
+    .mode-nav button.active {
+      background: #333;
+      color: #fff;
+    }
 
-    .row { display:flex; gap:8px; margin-bottom:8px; align-items:center; }
-    .row input[type="text"] { flex:1; padding:6px; font-size:14px; }
-    .row input[type="number"] { width:56px; padding:6px; font-size:14px; }
+    .row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
 
-    .grid { flex:1; display:grid; grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr; gap:8px; padding:8px; }
+    .row input[type="text"] {
+      flex: 1;
+      margin-right: 8px;
+      padding: 6px;
+    }
+    .row input[type="number"] {
+      width: 50px;
+      padding: 6px;
+      margin-left: 4px;
+    }
 
-    .panel { display:flex; flex-direction:column; border-radius:8px; border:1px solid #dcdcdc; overflow:hidden; background:#fff; }
+    .grid {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+      gap: 8px;
+      padding: 8px;
+      box-sizing: border-box;
+    }
 
-    .panel-top { padding:8px; flex:1; overflow-y:auto; }
-    .panel-top ul { list-style:none; padding:0; margin:0; }
-    .panel-top li { padding:4px 0; border-bottom:1px solid #f1f1f1; font-size:14px; }
+    .panel {
+      display: flex;
+      flex-direction: column;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      overflow: hidden;
+      background: #fff;
+    }
 
-    .panel-bottom { border-top:1px solid #e6e6e6; padding:6px; background:#fafafa; max-height:120px; overflow:auto; }
+    .panel-top {
+      flex: 1;
+      padding: 6px;
+      overflow-y: auto;
+    }
+    .panel-top ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .panel-top li {
+      padding: 2px 0;
+      border-bottom: 1px solid #eee;
+      font-size: 14px;
+    }
 
-    .input-wrapper { display:flex; gap:6px; align-items:center; margin-bottom:6px; }
-    .input-wrapper input { flex:1; padding:6px; font-size:14px; border:1px solid #e0e0e0; border-radius:4px; }
-    .toggle-btn { padding:6px 8px; font-size:13px; border:0; border-radius:6px; cursor:pointer; background:#ddd; }
+    .panel-bottom {
+      border-top: 1px solid #ddd;
+      padding: 4px;
+      background: #fafafa;
+      max-height: 80px;
+      overflow-y: auto;
+    }
 
-    .strikethrough { text-decoration:line-through; color:#666; }
+    .input-wrapper {
+      display: flex;
+      align-items: center;
+      margin-bottom: 4px;
+    }
+    .input-wrapper input {
+      flex: 1;
+      padding: 4px;
+      font-size: 14px;
+    }
 
-    /* touch / click fixes */
-    input, button { -webkit-appearance:none; -webkit-user-select:text; touch-action:manipulation; }
-    button { cursor:pointer; }
+    .toggle-btn {
+      margin-left: 4px;
+      padding: 2px 6px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .strikethrough {
+      text-decoration: line-through;
+    }
   </style>
 </head>
 <body>
@@ -100,17 +182,12 @@
   </div>
 
   <script>
-    // DATA: top words and manual notes behave the same (cascade forward)
     const collectedWords = { us: [[], [], [], []], them: [[], [], [], []] };
-    const manualNotes     = { us: [[], [], [], []], them: [[], [], [], []] };
+    const manualNotes = { us: [[], [], [], []], them: [[], [], [], []] };
 
-    let currentMode = 'us';
-    let currentPage = 0; // 0..7
-
-    // build UI
     function createTopBox(pageIndex, containerId) {
-      const top = document.createElement('div');
-      top.className = 'top-box';
+      const topBox = document.createElement('div');
+      topBox.className = 'top-box';
 
       const navRow = document.createElement('div');
       navRow.className = 'nav-row';
@@ -118,69 +195,90 @@
       const pageNav = document.createElement('div');
       pageNav.className = 'page-nav';
       for (let i = 0; i < 8; i++) {
-        const b = document.createElement('button');
-        b.type = 'button';
-        b.textContent = String(i + 1);
-        b.addEventListener('click', () => {
+        const btn = document.createElement('button');
+        btn.textContent = i + 1;
+        if (i === 0 && pageIndex === 1 && containerId === "usPages") btn.classList.add('active');
+        btn.addEventListener('click', () => {
           currentPage = i;
           updatePagePosition();
           updateAllNavs();
           updateAllPanels();
           updateAllNotes();
         });
-        pageNav.appendChild(b);
+        pageNav.appendChild(btn);
       }
 
       const modeNav = document.createElement('div');
       modeNav.className = 'mode-nav';
-      const usBtn = document.createElement('button'); usBtn.type = 'button'; usBtn.textContent = 'US';
-      const themBtn = document.createElement('button'); themBtn.type = 'button'; themBtn.textContent = 'THEM';
+      const usBtn = document.createElement('button');
+      usBtn.textContent = "US";
+      if (containerId === "usPages") usBtn.classList.add('active');
       usBtn.addEventListener('click', () => switchMode('us'));
+      const themBtn = document.createElement('button');
+      themBtn.textContent = "THEM";
+      if (containerId === "themPages") themBtn.classList.add('active');
       themBtn.addEventListener('click', () => switchMode('them'));
-      modeNav.appendChild(usBtn); modeNav.appendChild(themBtn);
+      modeNav.appendChild(usBtn);
+      modeNav.appendChild(themBtn);
 
       navRow.appendChild(pageNav);
       navRow.appendChild(modeNav);
-      top.appendChild(navRow);
+      topBox.appendChild(navRow);
 
-      // three word rows
-      for (let r = 0; r < 3; r++) {
-        const row = document.createElement('div'); row.className = 'row';
-        const txt = document.createElement('input'); txt.type = 'text'; txt.placeholder = 'Word';
-        const num1 = document.createElement('input'); num1.type = 'number'; num1.min = 1; num1.max = 4;
-        const num2 = document.createElement('input'); num2.type = 'number'; num2.min = 1; num2.max = 4;
+      for (let i = 0; i < 3; i++) {
+        const row = document.createElement('div');
+        row.className = 'row';
 
-        // Save when number second is changed (user chooses panel)
-        num2.addEventListener('change', () => {
-          const word = txt.value.trim();
-          const panelIndex = parseInt(num2.value, 10) - 1;
+        const textInput = document.createElement('input');
+        textInput.type = 'text';
+        textInput.placeholder = 'Word';
+        row.appendChild(textInput);
+
+        const numberInput1 = document.createElement('input');
+        numberInput1.type = 'number';
+        numberInput1.min = 1;
+        numberInput1.max = 4;
+        row.appendChild(numberInput1);
+
+        const numberInput2 = document.createElement('input');
+        numberInput2.type = 'number';
+        numberInput2.min = 1;
+        numberInput2.max = 4;
+        row.appendChild(numberInput2);
+
+        numberInput2.addEventListener('change', () => {
+          const word = textInput.value.trim();
+          const panelIndex = parseInt(numberInput2.value) - 1;
           if (word && panelIndex >= 0 && panelIndex < 4) {
             collectedWords[currentMode][panelIndex].push({ word, fromPage: currentPage });
             updateAllPanels();
           }
         });
 
-        row.appendChild(txt); row.appendChild(num1); row.appendChild(num2);
-        top.appendChild(row);
+        topBox.appendChild(row);
       }
-
-      return top;
+      return topBox;
     }
 
-    function createGrid() {
+    function createGrid(pageIndex) {
       const grid = document.createElement('div');
       grid.className = 'grid';
       for (let i = 0; i < 4; i++) {
-        const panel = document.createElement('div'); panel.className = 'panel';
-        const top = document.createElement('div'); top.className = 'panel-top';
-        const ul  = document.createElement('ul'); top.appendChild(ul);
+        const panel = document.createElement('div');
+        panel.className = 'panel';
 
-        const bottom = document.createElement('div'); bottom.className = 'panel-bottom';
-        bottom.dataset.panelIndex = i;
+        const panelTop = document.createElement('div');
+        panelTop.className = 'panel-top';
+        const ul = document.createElement('ul');
+        panelTop.appendChild(ul);
 
-        panel.appendChild(top);
-        panel.appendChild(bottom);
+        const panelBottom = document.createElement('div');
+        panelBottom.className = 'panel-bottom';
+        panelBottom.dataset.panelIndex = i;
         grid.appendChild(panel);
+
+        panel.appendChild(panelTop);
+        panel.appendChild(panelBottom);
       }
       return grid;
     }
@@ -188,177 +286,206 @@
     function buildPages(containerId) {
       const container = document.getElementById(containerId);
       container.innerHTML = '';
-      for (let p = 0; p < 8; p++) {
-        const page = document.createElement('div'); page.className = 'page'; page.dataset.pageIndex = p;
+      for (let p = 1; p <= 8; p++) {
+        const page = document.createElement('div');
+        page.className = 'page';
         page.appendChild(createTopBox(p, containerId));
-        page.appendChild(createGrid());
+        page.appendChild(createGrid(p - 1));
         container.appendChild(page);
       }
     }
 
+    let currentPage = 0;
+    let currentMode = 'us';
+
     function updatePagePosition() {
       const container = document.getElementById(currentMode + 'Pages');
-      container.style.marginLeft = `-${currentPage * 100}%`;
+      container.style.transform = `translateX(-${currentPage * 12.5}%)`;
     }
 
     function updateAllNavs() {
       document.querySelectorAll('.page-nav').forEach(nav => {
-        nav.querySelectorAll('button').forEach((btn, idx) => {
-          btn.classList.toggle('active', idx === currentPage);
+        nav.querySelectorAll('button').forEach((btn, i) => {
+          btn.classList.toggle('active', i === currentPage);
         });
-      });
-      document.querySelectorAll('.mode-nav').forEach(nav => {
-        const us = nav.children[0], th = nav.children[1];
-        if (currentMode === 'us') { us.classList.add('active'); th.classList.remove('active'); }
-        else { th.classList.add('active'); us.classList.remove('active'); }
       });
     }
 
     function updateAllPanels() {
-      // For every page, render the top lists with cascading rule
-      document.querySelectorAll(`#${currentMode}Pages .page`).forEach(page => {
-        const pageIndex = parseInt(page.dataset.pageIndex, 10);
-        page.querySelectorAll('.panel').forEach((panel, panelIndex) => {
-          const ul = panel.querySelector('.panel-top ul');
-          ul.innerHTML = '';
-          collectedWords[currentMode][panelIndex]
-            .filter(item => item.fromPage <= pageIndex)
-            .forEach(item => {
-              const li = document.createElement('li'); li.textContent = item.word;
-              ul.appendChild(li);
-            });
+      document.querySelectorAll(`#${currentMode}Pages .page`).forEach((page, pageIndex) => {
+        const grids = page.querySelectorAll('.grid');
+        grids.forEach(grid => {
+          grid.querySelectorAll('.panel').forEach((panel, i) => {
+            const ul = panel.querySelector('.panel-top ul');
+            ul.innerHTML = '';
+            collectedWords[currentMode][i]
+              .filter(item => item.fromPage <= pageIndex)
+              .forEach(item => {
+                const li = document.createElement('li');
+                li.textContent = item.word;
+                ul.appendChild(li);
+              });
+          });
         });
       });
     }
 
-    // Render manual notes into bottom panel; notes cascade forward like top words.
-    // We rebuild only when necessary (on page change / save / delete).
     function updateAllNotes() {
-      document.querySelectorAll(`#${currentMode}Pages .page`).forEach(page => {
-        const pageIndex = parseInt(page.dataset.pageIndex, 10);
+      document.querySelectorAll(`#${currentMode}Pages .page`).forEach((page, pageIndex) => {
         page.querySelectorAll('.panel-bottom').forEach((panelBottom, panelIndex) => {
           panelBottom.innerHTML = '';
-
-          // existing notes (only those with fromPage <= current page)
           manualNotes[currentMode][panelIndex]
-            .filter(n => n.fromPage <= pageIndex)
+            .filter(note => note.fromPage <= pageIndex)
             .forEach(note => {
-              const wr = document.createElement('div'); wr.className = 'input-wrapper';
-              const inp = document.createElement('input'); inp.type = 'text'; inp.value = note.text;
-              if (note.done) inp.classList.add('strikethrough');
-              const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'toggle-btn'; btn.textContent = '✔';
+              const wrapper = document.createElement('div');
+              wrapper.className = 'input-wrapper';
 
-              // toggle done
-              btn.addEventListener('click', () => {
+              const input = document.createElement('input');
+              input.type = 'text';
+              input.value = note.text;
+              if (note.done) input.classList.add('strikethrough');
+
+              const button = document.createElement('button');
+              button.textContent = '✔';
+              button.className = 'toggle-btn';
+
+              button.addEventListener('click', () => {
                 note.done = !note.done;
                 updateAllNotes();
               });
 
-              // Enter = save/update or delete if empty
-              inp.addEventListener('keydown', (ev) => {
-                if (ev.key === 'Enter') {
-                  ev.preventDefault();
-                  const val = inp.value.trim();
-                  if (!val) {
-                    // remove note from storage (remove all equal references)
-                    manualNotes[currentMode][panelIndex] = manualNotes[currentMode][panelIndex].filter(n => n !== note);
+              input.addEventListener('keydown', (e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  if (input.value.trim() === "") {
+                    manualNotes[currentMode][panelIndex] =
+                      manualNotes[currentMode][panelIndex].filter(n => n !== note);
                   } else {
-                    note.text = val;
+                    note.text = input.value.trim();
                   }
                   updateAllNotes();
                 }
               });
 
-              // blur: delete if empty, otherwise save text
-              inp.addEventListener('blur', () => {
-                const val = inp.value.trim();
-                if (!val) {
-                  manualNotes[currentMode][panelIndex] = manualNotes[currentMode][panelIndex].filter(n => n !== note);
-                } else {
-                  note.text = val;
+              input.addEventListener('blur', () => {
+                if (!input.value.trim()) {
+                  manualNotes[currentMode][panelIndex] =
+                    manualNotes[currentMode][panelIndex].filter(n => n !== note);
+                  updateAllNotes();
                 }
-                // only update (don't re-create focused input mid-typing)
-                // safe to call updateAllNotes because blur fires after typing finishes
-                updateAllNotes();
               });
 
-              wr.appendChild(inp); wr.appendChild(btn);
-              panelBottom.appendChild(wr);
+              wrapper.appendChild(input);
+              wrapper.appendChild(button);
+              panelBottom.appendChild(wrapper);
             });
 
-          // add one new empty input for creating notes
-          const newWr = document.createElement('div'); newWr.className = 'input-wrapper';
-          const newInp = document.createElement('input'); newInp.type = 'text'; newInp.placeholder = 'Type here...';
-          const newBtn = document.createElement('button'); newBtn.type = 'button'; newBtn.className = 'toggle-btn'; newBtn.textContent = '✔';
-
-          function saveNew() {
-            const v = newInp.value.trim();
-            if (!v) return;
-            manualNotes[currentMode][panelIndex].push({ text: v, fromPage: currentPage, done: false });
-            newInp.value = '';
-            updateAllNotes();
-          }
-
-          newBtn.addEventListener('click', saveNew);
-          newInp.addEventListener('keydown', (ev) => {
-            if (ev.key === 'Enter') { ev.preventDefault(); saveNew(); }
-          });
-
-          // if user blurs an empty new input — remove it (cleanup)
-          newInp.addEventListener('blur', () => {
-            if (!newInp.value.trim()) {
-              // slight delay to allow Enter click to register on mobile; we simply don't re-add persisted empty input
-              setTimeout(() => { updateAllNotes(); }, 100);
-            }
-          });
-
-          newWr.appendChild(newInp); newWr.appendChild(newBtn);
-          panelBottom.appendChild(newWr);
+          // add new input at bottom
+          setupNoteInput(panelBottom, panelIndex);
         });
       });
     }
 
+    function setupNoteInput(container, panelIndex) {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'input-wrapper';
+
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.placeholder = 'Type here...';
+
+      const button = document.createElement('button');
+      button.textContent = '✔';
+      button.className = 'toggle-btn';
+
+      function saveNote() {
+        const text = input.value.trim();
+        if (text.length > 0) {
+          manualNotes[currentMode][panelIndex].push({
+            text,
+            fromPage: currentPage,
+            done: input.classList.contains('strikethrough')
+          });
+          updateAllNotes();
+        }
+      }
+
+      button.addEventListener('click', saveNote);
+      input.addEventListener('keydown', (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          saveNote();
+        }
+      });
+      input.addEventListener('blur', () => {
+        if (!input.value.trim()) {
+          wrapper.remove();
+        }
+      });
+
+      wrapper.appendChild(input);
+      wrapper.appendChild(button);
+      container.appendChild(wrapper);
+    }
+
     function switchMode(mode) {
-      if (mode === currentMode) return;
-      currentMode = mode;
       if (mode === 'us') {
         document.body.classList.remove('them');
         document.getElementById('usPages').style.display = 'flex';
         document.getElementById('themPages').style.display = 'none';
+        currentMode = 'us';
       } else {
         document.body.classList.add('them');
         document.getElementById('usPages').style.display = 'none';
         document.getElementById('themPages').style.display = 'flex';
+        currentMode = 'them';
       }
       currentPage = 0;
       updatePagePosition();
       updateAllNavs();
       updateAllPanels();
       updateAllNotes();
+      document.querySelectorAll('.mode-nav button').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.mode-nav').forEach(nav => {
+        if (mode === 'us') nav.querySelector('button:first-child').classList.add('active');
+        else nav.querySelector('button:last-child').classList.add('active');
+      });
     }
 
-    // build both sets
     window.addEventListener('DOMContentLoaded', () => {
       buildPages('usPages');
       buildPages('themPages');
-      // initial rendering
       updatePagePosition();
       updateAllNavs();
       updateAllPanels();
       updateAllNotes();
     });
 
-    // SWIPE NAV
+    // Swipe
     let startX = 0;
-    window.addEventListener('touchstart', (e) => { startX = e.touches[0].clientX; }, {passive:true});
+    window.addEventListener('touchstart', (e) => {
+      startX = e.touches[0].clientX;
+    });
     window.addEventListener('touchend', (e) => {
       const endX = e.changedTouches[0].clientX;
-      if (startX - endX > 50 && currentPage < 7) { currentPage++; }
-      else if (endX - startX > 50 && currentPage > 0) { currentPage--; }
-      updatePagePosition(); updateAllNavs(); updateAllPanels(); updateAllNotes();
+      if (startX - endX > 50 && currentPage < 7) {
+        currentPage++;
+      } else if (endX - startX > 50 && currentPage > 0) {
+        currentPage--;
+      }
+      updatePagePosition();
+      updateAllNavs();
+      updateAllPanels();
+      updateAllNotes();
     });
 
-    // optional: keyboard-related helpers could be added later if needed
+    // iOS keyboard fix
+    document.addEventListener('focusin', () => {
+      document.body.style.overflow = 'visible';
+    });
+    document.addEventListener('focusout', () => {
+      document.body.style.overflow = 'hidden';
+    });
   </script>
 </body>
 </html>
