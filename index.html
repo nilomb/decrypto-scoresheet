@@ -302,6 +302,7 @@
 
     let currentPage = 0;
     let currentMode = 'us';
+    const lastPageByMode = { us: 0, them: 0 }; // NEW
 
     function updatePagePosition() {
       const container = document.getElementById(currentMode + 'Pages');
@@ -433,6 +434,9 @@
     }
 
     function switchMode(mode) {
+      // remember last page before switching
+      lastPageByMode[currentMode] = currentPage;
+
       if (mode === 'us') {
         document.body.classList.remove('them');
         document.getElementById('usPages').style.display = 'flex';
@@ -444,11 +448,15 @@
         document.getElementById('themPages').style.display = 'flex';
         currentMode = 'them';
       }
-      currentPage = 0;
+
+      // restore last visited page
+      currentPage = lastPageByMode[currentMode] || 0;
+
       updatePagePosition();
       updateAllNavs();
       updateAllPanels();
       updateAllNotes();
+
       document.querySelectorAll('.mode-nav button').forEach(btn => btn.classList.remove('active'));
       document.querySelectorAll('.mode-nav').forEach(nav => {
         if (mode === 'us') nav.querySelector('button:first-child').classList.add('active');
