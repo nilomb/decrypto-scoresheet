@@ -60,7 +60,6 @@
     .page-nav {
       display: flex;
       gap: 6px;
-      align-items: center;
     }
     .page-nav button {
       background: #ccc;
@@ -194,7 +193,6 @@
       font-size: 16px;
     }
 
-    /* New Game circular button */
     .new-game-btn {
       background: #ccc;
       border: none;
@@ -275,11 +273,10 @@
         pageNav.appendChild(btn);
       }
 
-      // ✅ Add New Game button only on first US page
       if (containerId === "usPages" && pageIndex === 1) {
         const newGameBtn = document.createElement("button");
         newGameBtn.className = "new-game-btn";
-        newGameBtn.textContent = "↻"; // circular arrow
+        newGameBtn.textContent = "↻";
         newGameBtn.addEventListener("click", newGame);
         pageNav.appendChild(newGameBtn);
       }
@@ -308,6 +305,7 @@
         const textInput = document.createElement('input');
         textInput.type = 'text';
         textInput.placeholder = 'Word';
+        textInput.enterKeyHint = "done";
         row.appendChild(textInput);
 
         let confirmed = false;
@@ -329,42 +327,42 @@
         numberInput1.type = 'number';
         numberInput1.min = 1;
         numberInput1.max = 4;
-        numberInput1.style.fontSize = "16px";
         numberInput1.inputMode = "numeric";
+        numberInput1.enterKeyHint = "done";
+        numberInput1.style.fontSize = "16px";
         row.appendChild(numberInput1);
 
         const numberInput2 = document.createElement('input');
         numberInput2.type = 'number';
         numberInput2.min = 1;
         numberInput2.max = 4;
-        numberInput2.style.fontSize = "16px";
         numberInput2.inputMode = "numeric";
+        numberInput2.enterKeyHint = "done";
+        numberInput2.style.fontSize = "16px";
         row.appendChild(numberInput2);
 
-        // Require Enter to confirm & reject invalid
         [numberInput1, numberInput2].forEach(numInput => {
-          let numConfirmed = false;
+          let confirmed = false;
           numInput.addEventListener("keydown", e => {
             if (e.key === "Enter") {
               e.preventDefault();
               const value = parseInt(numInput.value, 10);
               if (value >= 1 && value <= 4) {
-                numConfirmed = true;
+                confirmed = true;
                 numInput.blur();
               } else {
-                numInput.value = ""; // reject invalid
+                numInput.value = "";
               }
             }
           });
           numInput.addEventListener("blur", () => {
-            if (!numConfirmed) {
+            if (!confirmed) {
               numInput.value = "";
             }
-            numConfirmed = false;
+            confirmed = false;
           });
         });
 
-        // Assign only when rightmost number is valid + confirmed
         numberInput2.addEventListener('change', () => {
           const word = textInput.value.trim();
           const panelIndex = parseInt(numberInput2.value) - 1;
@@ -506,6 +504,7 @@
           const input = document.createElement('input');
           input.type = 'text';
           input.placeholder = 'Type here...';
+          input.enterKeyHint = "done";
 
           input.addEventListener('keydown', (e) => {
             if (e.key === "Enter") {
