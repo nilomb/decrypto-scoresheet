@@ -54,6 +54,7 @@
       display: flex;
       justify-content: space-between;
       margin-bottom: 10px;
+      align-items: center;
     }
 
     .page-nav {
@@ -110,6 +111,12 @@
       margin-left: 4px;
     }
 
+    /* Prevent iOS zoom on top-box inputs */
+    .top-box input[type="text"],
+    .top-box input[type="number"] {
+      font-size: 16px;
+    }
+
     .grid {
       flex: 1;
       display: grid;
@@ -151,6 +158,9 @@
       background: #fafafa;
       max-height: 80px;
       overflow-y: auto;
+      text-align: center;
+      font-weight: bold;
+      font-size: 18px;
     }
 
     .note-item {
@@ -194,6 +204,35 @@
     const collectedWords = { us: [[], [], [], []], them: [[], [], [], []] };
     const manualNotes = { us: [[], [], [], []], them: [[], [], [], []] };
 
+    let wordlist = [];
+    let usRandomWords = [];
+
+    async function loadWordlist() {
+      try {
+        const response = await fetch("wordlist.txt");
+        const text = await response.text();
+        wordlist = text.split(/\r?\n/).map(w => w.trim().toUpperCase()).filter(Boolean);
+        newGame();
+      } catch (e) {
+        console.error("Could not load wordlist.txt", e);
+      }
+    }
+
+    function newGame() {
+      if (wordlist.length < 4) return;
+      const shuffled = [...wordlist].sort(() => 0.5 - Math.random());
+      usRandomWords = shuffled.slice(0, 4);
+      updateUSWords();
+    }
+
+    function updateUSWords() {
+      document.querySelectorAll("#usPages .page").forEach(page => {
+        page.querySelectorAll(".panel-bottom").forEach((panelBottom, i) => {
+          panelBottom.textContent = usRandomWords[i] || "";
+        });
+      });
+    }
+
     function createTopBox(pageIndex, containerId) {
       const topBox = document.createElement('div');
       topBox.className = 'top-box';
@@ -215,6 +254,14 @@
           updateAllNotes();
         });
         pageNav.appendChild(btn);
+      }
+
+      // ✅ Add New Game button only on first US page
+      if (containerId === "usPages" && pageIndex === 1) {
+        const newGameBtn = document.createElement("button");
+        newGameBtn.textContent = "New Game";
+        newGameBtn.addEventListener("click", newGame);
+        pageNav.appendChild(newGameBtn);
       }
 
       const modeNav = document.createElement('div');
@@ -242,6 +289,21 @@
         textInput.type = 'text';
         textInput.placeholder = 'Word';
         row.appendChild(textInput);
+
+        let confirmed = false;
+        textInput.addEventListener('keydown', (e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            confirmed = true;
+            textInput.blur();
+          }
+        });
+        textInput.addEventListener('blur', () => {
+          if (!confirmed) {
+            textInput.value = "";
+          }
+          confirmed = false;
+        });
 
         const numberInput1 = document.createElement('input');
         numberInput1.type = 'number';
@@ -321,13 +383,11 @@
     }
 
     function addOrMoveWord(word, newPanelIndex) {
-      // remove word from other panels
       for (let i = 0; i < 4; i++) {
         collectedWords[currentMode][i] = collectedWords[currentMode][i].filter(
           item => !(item.word === word && item.fromPage === currentPage)
         );
       }
-      // add word to the new panel
       collectedWords[currentMode][newPanelIndex].push({ word, fromPage: currentPage });
       updateAllPanels();
     }
@@ -354,9 +414,13 @@
     function updateAllNotes() {
       document.querySelectorAll(`#${currentMode}Pages .page`).forEach((page, pageIndex) => {
         page.querySelectorAll('.panel-bottom').forEach((panelBottom, panelIndex) => {
+          if (currentMode === "us") {
+            panelBottom.textContent = usRandomWords[panelIndex] || "";
+            return;
+          }
+
           panelBottom.innerHTML = '';
 
-          // render saved notes
           manualNotes[currentMode][panelIndex]
             .filter(note => note.fromPage <= pageIndex)
             .forEach(note => {
@@ -388,7 +452,6 @@
               panelBottom.appendChild(wrapper);
             });
 
-          // single input for new note
           const inputWrapper = document.createElement('div');
           inputWrapper.className = 'note-input';
 
@@ -453,6 +516,7 @@
       updateAllNavs();
       updateAllPanels();
       updateAllNotes();
+      loadWordlist();
     });
   </script>
 </body>
