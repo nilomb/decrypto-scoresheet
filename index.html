@@ -2,8 +2,10 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Resizable iPhone Page with Swipe Navigation</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Decrypto Style Pages</title>
   <style>
     body {
       margin: 0;
@@ -12,29 +14,6 @@
       overflow: hidden;
       display: flex;
       flex-direction: column;
-    }
-
-    .top-nav {
-      display: flex;
-      justify-content: center;
-      gap: 20px;
-      padding: 10px;
-      background: #e0e0e0;
-    }
-
-    .top-nav button {
-      padding: 6px 12px;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 14px;
-      background: #ccc;
-      transition: background 0.3s, color 0.3s;
-    }
-
-    .top-nav button.active {
-      background: #333;
-      color: #fff;
     }
 
     .page-wrapper {
@@ -57,7 +36,7 @@
       flex-direction: column;
     }
 
-    /* Top section */
+    /* Top box of each page */
     .top-box {
       width: 100%;
       background: #f0f0f0;
@@ -70,10 +49,49 @@
       color: #000;
     }
 
-    body.them .panel {
-      border-color: #aaa;
-      background: #e0e0e0;
-      color: #000;
+    .nav-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    /* Page nav buttons */
+    .page-nav {
+      display: flex;
+      gap: 6px;
+    }
+    .page-nav button {
+      background: #ccc;
+      border: none;
+      padding: 4px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background 0.3s, color 0.3s;
+    }
+    .page-nav button.active {
+      background: #333;
+      color: #fff;
+      font-weight: bold;
+    }
+
+    /* US/THEM toggle */
+    .mode-nav {
+      display: flex;
+      gap: 6px;
+    }
+    .mode-nav button {
+      padding: 4px 8px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      background: #ccc;
+      transition: background 0.3s, color 0.3s;
+    }
+    .mode-nav button.active {
+      background: #333;
+      color: #fff;
     }
 
     .row {
@@ -111,38 +129,49 @@
       border: 1px solid #ccc;
       border-radius: 8px;
       overflow: hidden;
+      background: #fff;
     }
 
-    .sub-box {
-      flex-grow: 1;
-      overflow-y: auto;
+    .panel-top {
+      flex: 1;
       padding: 6px;
+      overflow-y: auto;
     }
 
-    .sub-box.top {
-      flex-basis: 80%;
+    .panel-top ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .panel-top li {
+      padding: 2px 0;
+      border-bottom: 1px solid #eee;
+      font-size: 14px;
     }
 
-    .sub-box.bottom {
-      flex-basis: 20%;
+    .panel-bottom {
       border-top: 1px solid #ddd;
+      padding: 4px;
+      background: #fafafa;
+      max-height: 80px;
+      overflow-y: auto;
     }
 
     .input-wrapper {
       display: flex;
       align-items: center;
-      margin-bottom: 6px;
+      margin-bottom: 4px;
     }
 
-    .input-wrapper input[type="text"] {
+    .input-wrapper input {
       flex: 1;
-      padding: 5px;
-      box-sizing: border-box;
+      padding: 4px;
+      font-size: 14px;
     }
 
     .toggle-btn {
-      margin-left: 6px;
-      padding: 4px 6px;
+      margin-left: 4px;
+      padding: 2px 6px;
       font-size: 12px;
       cursor: pointer;
     }
@@ -150,60 +179,78 @@
     .strikethrough {
       text-decoration: line-through;
     }
-
-    /* Page indicator */
-    .indicator {
-      display: flex;
-      justify-content: center;
-      gap: 8px;
-      padding: 8px;
-      background: #fafafa;
-    }
-
-    body.them .indicator {
-      background: #ccc;
-    }
-
-    .dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background: #ccc;
-      transition: background 0.3s;
-      cursor: pointer;
-    }
-
-    .dot.active {
-      background: #333;
-    }
   </style>
 </head>
 <body>
-  <div class="top-nav">
-    <button id="usBtn" class="active">US</button>
-    <button id="themBtn">THEM</button>
-  </div>
-
   <div class="page-wrapper">
     <div class="page-container" id="usPages"></div>
     <div class="page-container" id="themPages" style="display:none;"></div>
   </div>
 
-  <!-- Page indicator -->
-  <div class="indicator" id="indicator"></div>
-
   <script>
-    function createTopBox(pageIndex, mode) {
+    // Words storage: track words with page index
+    const collectedWords = {
+      us: [[], [], [], []], // each = [{ word, fromPage }]
+      them: [[], [], [], []]
+    };
+
+    // Manual notes, cascading like top lists
+    const manualNotes = {
+      us: [[], [], [], []], // each = [{ text, fromPage, done }]
+      them: [[], [], [], []]
+    };
+
+    function createTopBox(pageIndex, containerId) {
       const topBox = document.createElement('div');
       topBox.className = 'top-box';
 
+      // Nav row
+      const navRow = document.createElement('div');
+      navRow.className = 'nav-row';
+
+      // Page numbers
+      const pageNav = document.createElement('div');
+      pageNav.className = 'page-nav';
+      for (let i = 0; i < 8; i++) {
+        const btn = document.createElement('button');
+        btn.textContent = i + 1;
+        if (i === 0 && pageIndex === 1 && containerId === "usPages") btn.classList.add('active');
+        btn.addEventListener('click', () => {
+          currentPage = i;
+          updatePagePosition();
+          updateAllNavs();
+          updateAllPanels();
+          updateAllNotes();
+        });
+        pageNav.appendChild(btn);
+      }
+
+      // Mode buttons
+      const modeNav = document.createElement('div');
+      modeNav.className = 'mode-nav';
+      const usBtn = document.createElement('button');
+      usBtn.textContent = "US";
+      if (containerId === "usPages") usBtn.classList.add('active');
+      usBtn.addEventListener('click', () => switchMode('us'));
+      const themBtn = document.createElement('button');
+      themBtn.textContent = "THEM";
+      if (containerId === "themPages") themBtn.classList.add('active');
+      themBtn.addEventListener('click', () => switchMode('them'));
+      modeNav.appendChild(usBtn);
+      modeNav.appendChild(themBtn);
+
+      navRow.appendChild(pageNav);
+      navRow.appendChild(modeNav);
+      topBox.appendChild(navRow);
+
+      // Word rows
       for (let i = 0; i < 3; i++) {
         const row = document.createElement('div');
         row.className = 'row';
 
         const textInput = document.createElement('input');
         textInput.type = 'text';
-        textInput.placeholder = 'Text field';
+        textInput.placeholder = 'Word';
         row.appendChild(textInput);
 
         const numberInput1 = document.createElement('input');
@@ -212,13 +259,23 @@
         numberInput1.max = 4;
         row.appendChild(numberInput1);
 
-        if (pageIndex > 1) {
-          const numberInput2 = document.createElement('input');
-          numberInput2.type = 'number';
-          numberInput2.min = 1;
-          numberInput2.max = 4;
-          row.appendChild(numberInput2);
-        }
+        const numberInput2 = document.createElement('input');
+        numberInput2.type = 'number';
+        numberInput2.min = 1;
+        numberInput2.max = 4;
+        row.appendChild(numberInput2);
+
+        numberInput2.addEventListener('change', () => {
+          const word = textInput.value.trim();
+          const panelIndex = parseInt(numberInput2.value) - 1;
+          if (word && panelIndex >= 0 && panelIndex < 4) {
+            collectedWords[currentMode][panelIndex].push({
+              word,
+              fromPage: currentPage
+            });
+            updateAllPanels();
+          }
+        });
 
         topBox.appendChild(row);
       }
@@ -233,17 +290,52 @@
         const panel = document.createElement('div');
         panel.className = 'panel';
 
-        const topSub = document.createElement('div');
-        topSub.className = 'sub-box top';
-        panel.appendChild(topSub);
+        const panelTop = document.createElement('div');
+        panelTop.className = 'panel-top';
+        const ul = document.createElement('ul');
+        panelTop.appendChild(ul);
 
-        const bottomSub = document.createElement('div');
-        bottomSub.className = 'sub-box bottom';
-        panel.appendChild(bottomSub);
+        const panelBottom = document.createElement('div');
+        panelBottom.className = 'panel-bottom';
 
+        setupNoteInput(panelBottom, i);
+
+        panel.appendChild(panelTop);
+        panel.appendChild(panelBottom);
         grid.appendChild(panel);
       }
       return grid;
+    }
+
+    function setupNoteInput(container, panelIndex) {
+      // Create one empty input for new notes
+      const wrapper = document.createElement('div');
+      wrapper.className = 'input-wrapper';
+
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.placeholder = 'Type here...';
+
+      const button = document.createElement('button');
+      button.textContent = '✔';
+      button.className = 'toggle-btn';
+
+      button.addEventListener('click', () => {
+        if (input.value.trim().length > 0) {
+          manualNotes[currentMode][panelIndex].push({
+            text: input.value.trim(),
+            fromPage: currentPage,
+            done: input.classList.contains('strikethrough')
+          });
+          input.value = '';
+          input.classList.remove('strikethrough');
+          updateAllNotes();
+        }
+      });
+
+      wrapper.appendChild(input);
+      wrapper.appendChild(button);
+      container.appendChild(wrapper);
     }
 
     function buildPages(containerId) {
@@ -252,115 +344,126 @@
       for (let p = 1; p <= 8; p++) {
         const page = document.createElement('div');
         page.className = 'page';
-
-        page.appendChild(createTopBox(p));
+        page.dataset.pageIndex = p - 1;
+        page.appendChild(createTopBox(p, containerId));
         page.appendChild(createGrid());
-
         container.appendChild(page);
       }
-      container.querySelectorAll('.sub-box').forEach(setupDynamicInputs);
-    }
-
-    function setupDynamicInputs(container) {
-      function addInput() {
-        const wrapper = document.createElement('div');
-        wrapper.className = 'input-wrapper';
-
-        const input = document.createElement('input');
-        input.type = 'text';
-        input.placeholder = 'Type here...';
-
-        const button = document.createElement('button');
-        button.textContent = '✔';
-        button.className = 'toggle-btn';
-
-        button.addEventListener('click', () => {
-          input.classList.toggle('strikethrough');
-        });
-
-        input.addEventListener('input', function () {
-          if (input.value.length > 0 && !wrapper.nextElementSibling) {
-            addInput();
-          } else if (input.value.length === 0 && wrapper.nextElementSibling) {
-            if (wrapper.nextElementSibling || wrapper.previousElementSibling) {
-              wrapper.remove();
-            }
-          }
-        });
-
-        wrapper.appendChild(input);
-        wrapper.appendChild(button);
-        container.appendChild(wrapper);
-      }
-
-      addInput();
     }
 
     let currentPage = 0;
     let currentMode = 'us';
-
-    window.addEventListener('DOMContentLoaded', () => {
-      buildPages('usPages');
-      buildPages('themPages');
-
-      const indicator = document.getElementById('indicator');
-      indicator.innerHTML = '';
-      for (let i = 0; i < 8; i++) {
-        const dot = document.createElement('div');
-        dot.className = 'dot' + (i === 0 ? ' active' : '');
-        dot.addEventListener('click', () => {
-          currentPage = i;
-          updatePagePosition();
-          updateIndicator();
-        });
-        indicator.appendChild(dot);
-      }
-
-      const usBtn = document.getElementById('usBtn');
-      const themBtn = document.getElementById('themBtn');
-
-      usBtn.addEventListener('click', () => {
-        document.body.classList.remove('them');
-        document.getElementById('usPages').style.display = 'flex';
-        document.getElementById('themPages').style.display = 'none';
-        currentMode = 'us';
-        currentPage = 0;
-        updatePagePosition();
-        updateIndicator();
-        usBtn.classList.add('active');
-        themBtn.classList.remove('active');
-      });
-
-      themBtn.addEventListener('click', () => {
-        document.body.classList.add('them');
-        document.getElementById('usPages').style.display = 'none';
-        document.getElementById('themPages').style.display = 'flex';
-        currentMode = 'them';
-        currentPage = 0;
-        updatePagePosition();
-        updateIndicator();
-        themBtn.classList.add('active');
-        usBtn.classList.remove('active');
-      });
-    });
 
     function updatePagePosition() {
       const container = document.getElementById(currentMode + 'Pages');
       container.style.transform = `translateX(-${currentPage * 12.5}%)`;
     }
 
-    function updateIndicator() {
-      const dots = document.querySelectorAll('.dot');
-      dots.forEach((dot, i) => {
-        dot.classList.toggle('active', i === currentPage);
+    function updateAllNavs() {
+      document.querySelectorAll('.page-nav').forEach(nav => {
+        nav.querySelectorAll('button').forEach((btn, i) => {
+          btn.classList.toggle('active', i === currentPage);
+        });
       });
     }
+
+    function updateAllPanels() {
+      document.querySelectorAll(`#${currentMode}Pages .page`).forEach(page => {
+        const pageIndex = parseInt(page.dataset.pageIndex, 10);
+        page.querySelectorAll('.grid .panel').forEach((panel, i) => {
+          const ul = panel.querySelector('.panel-top ul');
+          ul.innerHTML = '';
+          collectedWords[currentMode][i]
+            .filter(item => item.fromPage <= pageIndex)
+            .forEach(item => {
+              const li = document.createElement('li');
+              li.textContent = item.word;
+              ul.appendChild(li);
+            });
+        });
+      });
+    }
+
+    function updateAllNotes() {
+      document.querySelectorAll(`#${currentMode}Pages .page`).forEach(page => {
+        const pageIndex = parseInt(page.dataset.pageIndex, 10);
+        page.querySelectorAll('.grid .panel').forEach((panel, i) => {
+          const container = panel.querySelector('.panel-bottom');
+          container.innerHTML = '';
+
+          manualNotes[currentMode][i]
+            .filter(note => note.fromPage <= pageIndex)
+            .forEach(note => {
+              const wrapper = document.createElement('div');
+              wrapper.className = 'input-wrapper';
+
+              const input = document.createElement('input');
+              input.type = 'text';
+              input.value = note.text;
+              if (note.done) input.classList.add('strikethrough');
+
+              const button = document.createElement('button');
+              button.textContent = '✔';
+              button.className = 'toggle-btn';
+
+              button.addEventListener('click', () => {
+                input.classList.toggle('strikethrough');
+                note.done = input.classList.contains('strikethrough');
+                updateAllNotes();
+              });
+
+              input.addEventListener('blur', () => {
+                note.text = input.value;
+              });
+
+              wrapper.appendChild(input);
+              wrapper.appendChild(button);
+              container.appendChild(wrapper);
+            });
+
+          // Add one empty input for new notes
+          setupNoteInput(container, i);
+        });
+      });
+    }
+
+    function switchMode(mode) {
+      if (mode === 'us') {
+        document.body.classList.remove('them');
+        document.getElementById('usPages').style.display = 'flex';
+        document.getElementById('themPages').style.display = 'none';
+        currentMode = 'us';
+      } else {
+        document.body.classList.add('them');
+        document.getElementById('usPages').style.display = 'none';
+        document.getElementById('themPages').style.display = 'flex';
+        currentMode = 'them';
+      }
+      currentPage = 0;
+      updatePagePosition();
+      updateAllNavs();
+      updateAllPanels();
+      updateAllNotes();
+      document.querySelectorAll('.mode-nav button').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.mode-nav').forEach(nav => {
+        if (mode === 'us') nav.querySelector('button:first-child').classList.add('active');
+        else nav.querySelector('button:last-child').classList.add('active');
+      });
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      buildPages('usPages');
+      buildPages('themPages');
+      updatePagePosition();
+      updateAllNavs();
+      updateAllPanels();
+      updateAllNotes();
+    });
 
     let startX = 0;
     window.addEventListener('touchstart', (e) => {
       startX = e.touches[0].clientX;
     });
-
     window.addEventListener('touchend', (e) => {
       const endX = e.changedTouches[0].clientX;
       if (startX - endX > 50 && currentPage < 7) {
@@ -369,7 +472,9 @@
         currentPage--;
       }
       updatePagePosition();
-      updateIndicator();
+      updateAllNavs();
+      updateAllPanels();
+      updateAllNotes();
     });
   </script>
 </body>
