@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable-status-bar-style" content="black-translucent">
   <title>Decrypto Style Pages</title>
   <style>
     body {
@@ -25,13 +25,13 @@
 
     .page-container {
       display: flex;
-      width: 800%; /* 8 pages */
+      width: 800%;
       height: 100%;
       transition: margin-left 0.3s ease;
     }
 
     .page {
-      width: 12.5%; /* 100 / 8 */
+      width: 12.5%;
       height: 100%;
       flex-shrink: 0;
       display: flex;
@@ -149,41 +149,38 @@
       border-top: 1px solid #ddd;
       padding: 4px;
       background: #fafafa;
-      max-height: 120px;
+      max-height: 80px;
       overflow-y: auto;
     }
 
-    .input-wrapper {
+    .note-item {
       display: flex;
       align-items: center;
-      margin-top: 4px;
-      gap: 4px;
-    }
-    .input-wrapper input {
-      flex: 1;
-      min-width: 0;
-      padding: 4px;
-      font-size: 16px;
-    }
-
-    .note-row {
-      display: flex;
       justify-content: space-between;
-      align-items: center;
-      padding: 2px 0;
-      border-bottom: 1px solid #eee;
+      margin-bottom: 4px;
+    }
+    .note-item span {
+      flex: 1;
       font-size: 16px;
     }
-    .note-row span {
-      flex: 1;
+    .note-item span.strikethrough {
+      text-decoration: line-through;
     }
-    .note-row .btn {
-      margin-left: 6px;
+    .note-item button {
+      margin-left: 4px;
+      padding: 2px 6px;
       cursor: pointer;
     }
 
-    .strikethrough {
-      text-decoration: line-through;
+    .note-input {
+      display: flex;
+      gap: 4px;
+      margin-top: 4px;
+    }
+    .note-input input {
+      flex: 1;
+      padding: 4px;
+      font-size: 16px;
     }
   </style>
 </head>
@@ -260,17 +257,9 @@
 
         numberInput2.addEventListener('change', () => {
           const word = textInput.value.trim();
-          const newPanelIndex = parseInt(numberInput2.value) - 1;
-
-          if (word && newPanelIndex >= 0 && newPanelIndex < 4) {
-            // remove from all panels first
-            for (let p = 0; p < 4; p++) {
-              collectedWords[currentMode][p] =
-                collectedWords[currentMode][p].filter(item => !(item.word === word && item.fromPage === currentPage));
-            }
-            // add to the new panel
-            collectedWords[currentMode][newPanelIndex].push({ word, fromPage: currentPage });
-            updateAllPanels();
+          const panelIndex = parseInt(numberInput2.value) - 1;
+          if (word && panelIndex >= 0 && panelIndex < 4) {
+            addOrMoveWord(word, panelIndex);
           }
         });
 
@@ -331,6 +320,18 @@
       });
     }
 
+    function addOrMoveWord(word, newPanelIndex) {
+      // remove word from other panels
+      for (let i = 0; i < 4; i++) {
+        collectedWords[currentMode][i] = collectedWords[currentMode][i].filter(
+          item => !(item.word === word && item.fromPage === currentPage)
+        );
+      }
+      // add word to the new panel
+      collectedWords[currentMode][newPanelIndex].push({ word, fromPage: currentPage });
+      updateAllPanels();
+    }
+
     function updateAllPanels() {
       document.querySelectorAll(`#${currentMode}Pages .page`).forEach((page, pageIndex) => {
         const grids = page.querySelectorAll('.grid');
@@ -359,72 +360,61 @@
           manualNotes[currentMode][panelIndex]
             .filter(note => note.fromPage <= pageIndex)
             .forEach(note => {
-              const row = document.createElement('div');
-              row.className = "note-row";
+              const wrapper = document.createElement('div');
+              wrapper.className = 'note-item';
 
-              const textSpan = document.createElement('span');
-              textSpan.textContent = note.text;
-              if (note.done) textSpan.classList.add('strikethrough');
-              row.appendChild(textSpan);
+              const span = document.createElement('span');
+              span.textContent = note.text;
+              if (note.done) span.classList.add('strikethrough');
 
-              const strikeBtn = document.createElement('button');
-              strikeBtn.textContent = "➖";
-              strikeBtn.className = "btn";
-              strikeBtn.addEventListener('click', () => {
+              const checkBtn = document.createElement('button');
+              checkBtn.textContent = '✔';
+              checkBtn.addEventListener('click', () => {
                 note.done = !note.done;
                 updateAllNotes();
               });
 
               const deleteBtn = document.createElement('button');
-              deleteBtn.textContent = "❌";
-              deleteBtn.className = "btn";
+              deleteBtn.textContent = '✖';
               deleteBtn.addEventListener('click', () => {
                 manualNotes[currentMode][panelIndex] =
                   manualNotes[currentMode][panelIndex].filter(n => n !== note);
                 updateAllNotes();
               });
 
-              row.appendChild(strikeBtn);
-              row.appendChild(deleteBtn);
-
-              panelBottom.appendChild(row);
+              wrapper.appendChild(span);
+              wrapper.appendChild(checkBtn);
+              wrapper.appendChild(deleteBtn);
+              panelBottom.appendChild(wrapper);
             });
 
-          // input at bottom
-          setupNoteInput(panelBottom, panelIndex);
+          // single input for new note
+          const inputWrapper = document.createElement('div');
+          inputWrapper.className = 'note-input';
+
+          const input = document.createElement('input');
+          input.type = 'text';
+          input.placeholder = 'Type here...';
+
+          input.addEventListener('keydown', (e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              const text = input.value.trim();
+              if (text) {
+                manualNotes[currentMode][panelIndex].push({
+                  text,
+                  fromPage: currentPage,
+                  done: false
+                });
+                updateAllNotes();
+              }
+            }
+          });
+
+          inputWrapper.appendChild(input);
+          panelBottom.appendChild(inputWrapper);
         });
       });
-    }
-
-    function setupNoteInput(container, panelIndex) {
-      const wrapper = document.createElement('div');
-      wrapper.className = 'input-wrapper';
-
-      const input = document.createElement('input');
-      input.type = 'text';
-      input.placeholder = 'Type here...';
-
-      function saveNote() {
-        const text = input.value.trim();
-        if (text.length > 0) {
-          manualNotes[currentMode][panelIndex].push({
-            text,
-            fromPage: currentPage,
-            done: false
-          });
-          updateAllNotes();
-        }
-      }
-
-      input.addEventListener('keydown', (e) => {
-        if (e.key === "Enter") {
-          e.preventDefault();
-          saveNote();
-        }
-      });
-
-      wrapper.appendChild(input);
-      container.appendChild(wrapper);
     }
 
     function switchMode(mode) {
