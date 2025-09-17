@@ -1,11 +1,10 @@
 {
-  "name": "Decrypto Scoresheet",
+  "name": "Decrypto Score Sheet",
   "short_name": "Decrypto",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#333333",
-  "orientation": "portrait",
+  "theme_color": "#000000",
   "icons": [
     {
       "src": "icon-192.png",
