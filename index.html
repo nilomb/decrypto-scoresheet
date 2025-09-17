@@ -11,7 +11,8 @@
       margin: 0;
       font-family: sans-serif;
       height: 100dvh; /* dynamic viewport height for iOS */
-      overflow: hidden;
+      overflow-x: hidden; /* allow vertical scrolling */
+      overflow-y: auto;
       display: flex;
       flex-direction: column;
       padding-bottom: env(safe-area-inset-bottom); /* prevent Safari overlay */
@@ -20,21 +21,23 @@
     .page-wrapper {
       flex: 1;
       position: relative;
+      overflow: hidden;
     }
 
     .page-container {
       display: flex;
       width: 800%; /* 8 pages */
       height: 100%;
-      transition: transform 0.3s ease;
+      transition: margin-left 0.3s ease; /* use margin-left instead of transform */
     }
 
     .page {
       width: 12.5%; /* 100 / 8 */
-      height: 100%;
+      min-height: 100%;
       flex-shrink: 0;
       display: flex;
       flex-direction: column;
+      overflow-y: auto; /* allow scrolling inside page */
     }
 
     /* Top box */
@@ -173,6 +176,13 @@
     .strikethrough {
       text-decoration: line-through;
     }
+
+    /* iOS touch fixes */
+    input, button {
+      -webkit-user-select: text;
+      -webkit-appearance: none;
+      touch-action: manipulation;
+    }
   </style>
 </head>
 <body>
@@ -275,10 +285,10 @@
         const panelBottom = document.createElement('div');
         panelBottom.className = 'panel-bottom';
         panelBottom.dataset.panelIndex = i;
-        grid.appendChild(panel);
-
         panel.appendChild(panelTop);
         panel.appendChild(panelBottom);
+
+        grid.appendChild(panel);
       }
       return grid;
     }
@@ -300,7 +310,7 @@
 
     function updatePagePosition() {
       const container = document.getElementById(currentMode + 'Pages');
-      container.style.transform = `translateX(-${currentPage * 12.5}%)`;
+      container.style.marginLeft = `-${currentPage * 12.5}%`;
     }
 
     function updateAllNavs() {
@@ -461,7 +471,7 @@
       updateAllNotes();
     });
 
-    // Swipe
+    // Swipe navigation
     let startX = 0;
     window.addEventListener('touchstart', (e) => {
       startX = e.touches[0].clientX;
@@ -477,14 +487,6 @@
       updateAllNavs();
       updateAllPanels();
       updateAllNotes();
-    });
-
-    // iOS keyboard fix
-    document.addEventListener('focusin', () => {
-      document.body.style.overflow = 'visible';
-    });
-    document.addEventListener('focusout', () => {
-      document.body.style.overflow = 'hidden';
     });
   </script>
 </body>
