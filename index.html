@@ -10,11 +10,12 @@
     body {
       margin: 0;
       font-family: sans-serif;
-      height: 100dvh; /* dynamic viewport height for iOS */
-      overflow: hidden;
+      height: 100dvh;
+      overflow-x: hidden;   /* only hide horizontal */
+      overflow-y: auto;     /* allow vertical scroll when keyboard shows */
       display: flex;
       flex-direction: column;
-      padding-bottom: env(safe-area-inset-bottom); /* prevent Safari overlay */
+      padding-bottom: env(safe-area-inset-bottom);
     }
 
     .page-wrapper {
@@ -26,7 +27,7 @@
       display: flex;
       width: 800%; /* 8 pages */
       height: 100%;
-      transition: transform 0.3s ease;
+      transition: margin-left 0.3s ease; /* changed from transform */
     }
 
     .page {
@@ -156,15 +157,19 @@
       display: flex;
       align-items: center;
       margin-bottom: 4px;
+      gap: 4px; /* spacing between input and button */
     }
     .input-wrapper input {
       flex: 1;
+      min-width: 0; /* prevents button overflow */
       padding: 4px;
       font-size: 14px;
     }
+    .input-wrapper .toggle-btn {
+      flex: 0 0 auto; /* keep button visible */
+    }
 
     .toggle-btn {
-      margin-left: 4px;
       padding: 2px 6px;
       font-size: 12px;
       cursor: pointer;
@@ -300,7 +305,7 @@
 
     function updatePagePosition() {
       const container = document.getElementById(currentMode + 'Pages');
-      container.style.transform = `translateX(-${currentPage * 12.5}%)`;
+      container.style.marginLeft = `-${currentPage * 100}%`; // was transform
     }
 
     function updateAllNavs() {
@@ -380,7 +385,6 @@
               panelBottom.appendChild(wrapper);
             });
 
-          // add new input at bottom
           setupNoteInput(panelBottom, panelIndex);
         });
       });
@@ -459,32 +463,6 @@
       updateAllNavs();
       updateAllPanels();
       updateAllNotes();
-    });
-
-    // Swipe
-    let startX = 0;
-    window.addEventListener('touchstart', (e) => {
-      startX = e.touches[0].clientX;
-    });
-    window.addEventListener('touchend', (e) => {
-      const endX = e.changedTouches[0].clientX;
-      if (startX - endX > 50 && currentPage < 7) {
-        currentPage++;
-      } else if (endX - startX > 50 && currentPage > 0) {
-        currentPage--;
-      }
-      updatePagePosition();
-      updateAllNavs();
-      updateAllPanels();
-      updateAllNotes();
-    });
-
-    // iOS keyboard fix
-    document.addEventListener('focusin', () => {
-      document.body.style.overflow = 'visible';
-    });
-    document.addEventListener('focusout', () => {
-      document.body.style.overflow = 'hidden';
     });
   </script>
 </body>
