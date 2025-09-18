@@ -21,17 +21,18 @@
     .page-wrapper {
       flex: 1;
       position: relative;
+      overflow: hidden; /* prevent showing next/previous page */
     }
 
     .page-container {
       display: flex;
-      width: 800%;
+      width: 100%; /* each page is 100% wide */
       height: 100%;
-      transition: margin-left 0.3s ease;
+      transition: transform 0.3s ease;
     }
 
     .page {
-      width: 12.5%;
+      width: 100%; /* full screen per page */
       height: 100%;
       flex-shrink: 0;
       display: flex;
@@ -111,9 +112,10 @@
       margin-left: 4px;
     }
 
-    /* Prevent iOS zoom on top-box inputs */
+    /* Prevent iOS zoom on inputs */
     .top-box input[type="text"],
-    .top-box input[type="number"] {
+    .top-box input[type="number"],
+    .note-input input {
       font-size: 16px;
     }
 
@@ -190,7 +192,6 @@
     .note-input input {
       flex: 1;
       padding: 4px;
-      font-size: 16px;
     }
 
     .new-game-btn {
@@ -306,6 +307,7 @@
         textInput.type = 'text';
         textInput.placeholder = 'Word';
         textInput.enterKeyHint = "done";
+        textInput.style.fontSize = "16px";
         row.appendChild(textInput);
 
         let confirmed = false;
@@ -328,7 +330,6 @@
         numberInput1.min = 1;
         numberInput1.max = 4;
         numberInput1.inputMode = "numeric";
-        numberInput1.enterKeyHint = "done";
         numberInput1.style.fontSize = "16px";
         row.appendChild(numberInput1);
 
@@ -337,29 +338,15 @@
         numberInput2.min = 1;
         numberInput2.max = 4;
         numberInput2.inputMode = "numeric";
-        numberInput2.enterKeyHint = "done";
         numberInput2.style.fontSize = "16px";
         row.appendChild(numberInput2);
 
         [numberInput1, numberInput2].forEach(numInput => {
-          let confirmed = false;
-          numInput.addEventListener("keydown", e => {
-            if (e.key === "Enter") {
-              e.preventDefault();
-              const value = parseInt(numInput.value, 10);
-              if (value >= 1 && value <= 4) {
-                confirmed = true;
-                numInput.blur();
-              } else {
-                numInput.value = "";
-              }
-            }
-          });
           numInput.addEventListener("blur", () => {
-            if (!confirmed) {
+            const value = parseInt(numInput.value, 10);
+            if (isNaN(value) || value < 1 || value > 4) {
               numInput.value = "";
             }
-            confirmed = false;
           });
         });
 
@@ -417,7 +404,7 @@
 
     function updatePagePosition() {
       const container = document.getElementById(currentMode + 'Pages');
-      container.style.marginLeft = `-${currentPage * 100}%`;
+      container.style.transform = `translateX(-${currentPage * 100}%)`;
     }
 
     function updateAllNavs() {
@@ -505,6 +492,7 @@
           input.type = 'text';
           input.placeholder = 'Type here...';
           input.enterKeyHint = "done";
+          input.style.fontSize = "16px";
 
           input.addEventListener('keydown', (e) => {
             if (e.key === "Enter") {
