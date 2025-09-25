@@ -1,655 +1,1040 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="mobile-web-app-capable-status-bar-style" content="black-translucent">
-  <title>Decrypto Style Pages</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: sans-serif;
-      height: 100dvh;
-      overflow-x: hidden;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      padding-bottom: env(safe-area-inset-bottom);
-    }
-
-    .page-wrapper {
-      flex: 1;
-      position: relative;
-      overflow: hidden; /* prevent showing next/previous page */
-    }
-
-    .page-container {
-      display: flex;
-      width: 100%; /* each page is 100% wide */
-      height: 100%;
-      transition: transform 0.3s ease;
-    }
-
-    .page {
-      width: 100%; /* full screen per page */
-      height: 100%;
-      flex-shrink: 0;
-      display: flex;
-      flex-direction: column;
-    }
-
-    /* Top box */
-    .top-box {
-      width: 100%;
-      background: #f0f0f0;
-      padding: 10px;
-      box-sizing: border-box;
-    }
-    body.them .top-box {
-      background: #ddd;
-      color: #000;
-    }
-
-    .nav-row {
-      display: flex;
-      justify-content: space-between; /* equal spacing for pageNav, newGameBtn, modeNav */
-      margin-bottom: 10px;
-      align-items: center;
-    }
-
-    .page-nav {
-      display: flex;
-      gap: 3px;
-    }
-    .page-nav button {
-      background: #ccc;
-      border: none;
-      padding: 4px 8px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 16px;
-      transition: background 0.3s, color 0.3s;
-    }
-    .page-nav button.active {
-      background: #333;
-      color: #fff;
-      font-weight: bold;
-    }
-
-    .mode-nav {
-      display: flex;
-      gap: 3px;
-    }
-    .mode-nav button {
-      padding: 4px 8px;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 16px;
-      background: #ccc;
-      transition: background 0.3s, color 0.3s;
-    }
-    .mode-nav button.active {
-      background: #333;
-      color: #fff;
-    }
-
-    .row {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 8px;
-    }
-
-    .row input[type="text"] {
-      flex: 1;
-      margin-right: 8px;
-      padding: 6px;
-    }
-    .row input[type="number"] {
-      width: 50px;
-      padding: 6px;
-      margin-left: 4px;
-    }
-
-    /* Prevent iOS zoom on inputs */
-    .top-box input[type="text"],
-    .top-box input[type="number"],
-    .note-input input {
-      font-size: 16px;
-    }
-
-    .grid {
-      flex: 1;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      grid-template-rows: 1fr 1fr;
-      gap: 8px;
-      padding: 8px;
-      box-sizing: border-box;
-    }
-
-    .panel {
-      display: flex;
-      flex-direction: column;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      overflow: hidden;
-      background: #fff;
-      position: relative; /* for background number */
-    }
-
-    /* Big faint panel number */
-    .panel::before {
-      content: attr(data-panel);
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      font-size: 600%;
-      font-weight: bold;
-      color: rgba(0, 0, 0, 0.03);
-      pointer-events: none;
-      white-space: nowrap;
-    }
-
-    .panel-top {
-      flex: 1;
-      padding: 6px;
-      overflow-y: auto;
-    }
-    .panel-top ul {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-    }
-    .panel-top li {
-      padding: 2px 0;
-      border-bottom: 1px solid #eee;
-      font-size: 16px;
-    }
-
-    .panel-bottom {
-      border-top: 1px solid #ddd;
-      padding: 4px;
-      background: #fafafa;
-      max-height: 80px;
-      overflow-y: auto;
-      text-align: center;
-      font-weight: 500;
-      font-size: 18px;
-    }
-
-    .note-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 4px;
-    }
-    .note-item span {
-      flex: 1;
-      font-size: 16px;
-      text-transform: uppercase;
-    }
-    .note-item span.strikethrough {
-      text-decoration: line-through;
-    }
-    .note-item button {
-      margin-left: 4px;
-      padding: 2px 6px;
-      cursor: pointer;
-    }
-
-    .note-input {
-      display: flex;
-      gap: 4px;
-      margin-top: 4px;
-    }
-    .note-input input {
-      flex: 1;
-      padding: 4px;
-      text-transform: uppercase;
-    }
-
-    .new-game-btn {
-      background: blue; /* blue background */
-      color: white;
-      border: none;
-      border-radius: 50%;
-      width: 32px;
-      height: 32px;
-      font-size: 20px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .new-game-btn:hover {
-      background: #0044cc;
-      color: #fff;
-    }
-
-    /* Overlay + Modal */
-    .modal-overlay {
-      display: none;
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.4);
-      z-index: 999;
-    }
-    .modal {
-      display: none;
-      position: fixed;
-      top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      background: #fff;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-      z-index: 1000;
-      text-align: center;
-    }
-    .modal button {
-      margin: 10px;
-      padding: 6px 14px;
-      font-size: 16px;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-    .modal .yes {
-      background: blue;
-      color: #fff;
-    }
-    .modal .no {
-      background: #ccc;
-    }
-  </style>
-</head>
-<body>
-  <div class="page-wrapper">
-    <div class="page-container" id="usPages"></div>
-    <div class="page-container" id="themPages" style="display:none;"></div>
-  </div>
-
-  <!-- Overlay + Modal -->
-  <div id="modalOverlay" class="modal-overlay"></div>
-  <div id="confirmModal" class="modal">
-    <p>Are you sure?</p>
-    <button class="yes">Yes</button>
-    <button class="no">No</button>
-  </div>
-
-  <script>
-    const collectedWords = { us: [[], [], [], []], them: [[], [], [], []] };
-    const manualNotes = { us: [[], [], [], []], them: [[], [], [], []] };
-
-    let wordlist = [];
-    let usRandomWords = [];
-
-    async function loadWordlist() {
-      try {
-        const response = await fetch("wordlist.txt");
-        const text = await response.text();
-        wordlist = text.split(/\r?\n/).map(w => w.trim().toUpperCase()).filter(Boolean);
-        // start empty, no auto newGame
-      } catch (e) {
-        console.error("Could not load wordlist.txt", e);
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta
+      name="mobile-web-app-capable-status-bar-style"
+      content="black-translucent"
+    />
+    <title>Decrypto Style Pages</title>
+    <style>
+      body {
+        margin: 0;
+        font-family: sans-serif;
+        height: 100dvh;
+        overflow-x: hidden;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        padding-bottom: env(safe-area-inset-bottom);
       }
-    }
+      .page-wrapper {
+        flex: 1;
+        position: relative;
+        overflow: hidden;
+      }
+      .page-container {
+        display: flex;
+        width: 100%;
+        height: 100%;
+        transition: transform 0.3s ease;
+      }
+      .page {
+        width: 100%;
+        height: 100%;
+        flex-shrink: 0;
+        display: flex;
+        flex-direction: column;
+        padding-bottom: 60px;
+        box-sizing: border-box;
+        overflow: hidden;
+      }
+      .top-box {
+        width: 100%;
+        background: #f0f0f0;
+        padding: 10px;
+        box-sizing: border-box;
+      }
+      body.them .top-box {
+        background: #ddd;
+        color: #000;
+      }
+      .nav-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+        align-items: center;
+      }
+      .page-nav {
+        display: flex;
+        gap: 3px;
+      }
+      .page-nav button {
+        background: #ccc;
+        border: none;
+        padding: 4px 8px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 16px;
+        transition: background 0.3s, color 0.3s;
+      }
+      .page-nav button.active {
+        background: #333;
+        color: #fff;
+        font-weight: bold;
+      }
+      .mode-nav {
+        display: flex;
+        gap: 3px;
+      }
+      .mode-nav button {
+        padding: 4px 8px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 16px;
+        background: #ccc;
+        transition: background 0.3s, color 0.3s;
+      }
+      .mode-nav button.active {
+        background: #333;
+        color: #fff;
+      }
+      .row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 8px;
+      }
+      .row input[type="text"] {
+        flex: 1;
+        margin-right: 8px;
+        padding: 6px;
+      }
+      .row input[type="number"] {
+        width: 50px;
+        padding: 6px;
+        margin-left: 4px;
+      }
+      .top-box input[type="text"],
+      .top-box input[type="number"],
+      .note-input input {
+        font-size: 16px;
+      }
+      .grid {
+        flex: 1;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: 1fr 1fr;
+        gap: 8px;
+        padding: 8px;
+        box-sizing: border-box;
+        overflow: hidden;
+      }
+      .panel {
+        display: flex;
+        flex-direction: column;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        overflow: hidden;
+        background: #fff;
+        position: relative;
+      }
+      .panel::before {
+        content: attr(data-panel);
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 600%;
+        font-weight: bold;
+        color: rgba(0, 0, 0, 0.03);
+        pointer-events: none;
+        white-space: nowrap;
+      }
+      .panel-top {
+        flex: 1;
+        padding: 6px;
+        overflow-y: auto;
+      }
+      .panel-top ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+      .panel-top li {
+        padding: 2px 0;
+        border-bottom: 1px solid #eee;
+        font-size: 16px;
+        line-height: 1.2;
+      }
+      .panel-bottom {
+        border-top: 1px solid #ddd;
+        padding: 4px;
+        background: #fafafa;
+        max-height: 80px;
+        overflow-y: auto;
+        text-align: center;
+        font-weight: 500;
+        font-size: 18px;
+      }
+      .note-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 4px;
+      }
+      .note-item span {
+        flex: 1;
+        font-size: 16px;
+        text-transform: uppercase;
+      }
+      .note-item span.strikethrough {
+        text-decoration: line-through;
+      }
+      .note-item button {
+        margin-left: 4px;
+        padding: 2px 6px;
+        cursor: pointer;
+      }
+      .note-input {
+        display: flex;
+        gap: 4px;
+        margin-top: 4px;
+      }
+      .note-input input {
+        flex: 1;
+        padding: 4px;
+        text-transform: uppercase;
+      }
+      .new-game-btn {
+        background: blue;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 32px;
+        height: 32px;
+        font-size: 20px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .new-game-btn:hover {
+        background: #0044cc;
+        color: #fff;
+      }
+      .modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.4);
+        z-index: 999;
+      }
+      .modal {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: #fff;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        z-index: 1000;
+        text-align: center;
+      }
+      .modal button {
+        margin: 10px;
+        padding: 6px 14px;
+        font-size: 16px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+      }
+      .modal .yes {
+        background: blue;
+        color: #fff;
+      }
+      .modal .no {
+        background: #ccc;
+      }
+      .bottom-nav {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 60px;
+        background: #f8f8f8;
+        border-top: 1px solid #ccc;
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        z-index: 100;
+      }
+      .bottom-nav button {
+        flex: 1;
+        background: none;
+        border: none;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        font-size: 12px;
+        color: #333;
+        cursor: pointer;
+      }
+      .bottom-nav button .icon {
+        font-size: 20px;
+        line-height: 1;
+        margin-bottom: 2px;
+      }
+      #codeModal {
+        display: none;
+        padding: 10px 20px;
+        font-size: 24px;
+        font-weight: bold;
+      }
+      .codeWords {
+        display: flex;
+        gap: 6px;
+        justify-content: center;
+        margin-bottom: 12px;
+        font-size: 16px;
+        font-weight: 400;
+      }
+      #codeWords span {
+        padding: 4px;
+        background: #b9efff;
+        border-radius: 6px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page-wrapper">
+      <div class="page-container" id="usPages"></div>
+      <div class="page-container" id="themPages" style="display: none"></div>
+    </div>
 
-    function newGame() {
-      if (wordlist.length < 4) return;
-      const shuffled = [...wordlist].sort(() => 0.5 - Math.random());
-      usRandomWords = shuffled.slice(0, 4);
-      localStorage.setItem("usRandomWords", JSON.stringify(usRandomWords));
-      updateUSWords();
-    }
+    <div id="modalOverlay" class="modal-overlay"></div>
+    <div id="confirmModal" class="modal">
+      <p>Are you sure?</p>
+      <button class="yes">Yes</button>
+      <button class="no">No</button>
+    </div>
+    <div id="codeModal" class="modal">
+      <div id="codeWords" class="codeWords"></div>
+      <p id="codeSequence"></p>
+    </div>
 
-    function loadSavedWords() {
-      const saved = localStorage.getItem("usRandomWords");
-      if (saved) {
-        usRandomWords = JSON.parse(saved);
+    <script>
+      const collectedWords = { us: [[], [], [], []], them: [[], [], [], []] };
+      const manualNotes = { us: [[], [], [], []], them: [[], [], [], []] };
+      let wordlist = [],
+        usRandomWords = [];
+      let currentPage = 0,
+        currentMode = "us";
+      const lastPageByMode = { us: 0, them: 0 };
+
+      // Flag globale per tracciare pagine già copiate in THEM
+      const copiedToThemPages = new Set();
+      let pageCodes = []; // array con i codici per ogni pagina US (8 totali)
+
+      function generateUniqueSequence() {
+        const numbers = [1, 2, 3, 4];
+        for (let i = numbers.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [numbers[i], numbers[j]] = [numbers[j], numbers[i]];
+        }
+        return numbers.slice(0, 3).join(".");
+      }
+      function generateAllUniqueCodes(count = 8) {
+        const codes = new Set();
+        while (codes.size < count) {
+          codes.add(generateUniqueSequence());
+        }
+        return Array.from(codes);
+      }
+
+      function generateAllCodes() {
+        pageCodes = [];
+        const seen = new Set();
+        while (pageCodes.length < 8) {
+          const code = generateUniqueSequence();
+          if (!seen.has(code)) {
+            seen.add(code);
+            pageCodes.push(code);
+          }
+        }
+        localStorage.setItem("pageCodes", JSON.stringify(pageCodes));
+      }
+      async function loadWordlist() {
+        try {
+          const response = await fetch("wordlist.txt");
+          const text = await response.text();
+          wordlist = text
+            .split(/\r?\n/)
+            .map((w) => w.trim().toUpperCase())
+            .filter(Boolean);
+        } catch (e) {
+          console.error("Could not load wordlist.txt", e);
+        }
+      }
+      function loadCodes() {
+        const saved = localStorage.getItem("pageCodes");
+        if (saved) {
+          pageCodes = JSON.parse(saved);
+        } else {
+          generateAllCodes();
+        }
+      }
+      function newGame() {
+        if (wordlist.length < 4) return;
+        const shuffled = [...wordlist].sort(() => 0.5 - Math.random());
+        usRandomWords = shuffled.slice(0, 4);
+        localStorage.setItem("usRandomWords", JSON.stringify(usRandomWords));
         updateUSWords();
       }
-    }
 
-    function updateUSWords() {
-      document.querySelectorAll("#usPages .page").forEach(page => {
-        page.querySelectorAll(".panel-bottom").forEach((panelBottom, i) => {
-          panelBottom.textContent = usRandomWords[i] || "";
-        });
-      });
-    }
-
-    function createTopBox(pageIndex, containerId) {
-      const topBox = document.createElement('div');
-      topBox.className = 'top-box';
-
-      const navRow = document.createElement('div');
-      navRow.className = 'nav-row';
-
-      const pageNav = document.createElement('div');
-      pageNav.className = 'page-nav';
-      for (let i = 0; i < 8; i++) {
-        const btn = document.createElement('button');
-        btn.textContent = i + 1;
-        if (i === 0 && pageIndex === 1 && containerId === "usPages") btn.classList.add('active');
-        btn.addEventListener('click', () => {
-          currentPage = i;
-          updatePagePosition();
-          updateAllNavs();
-          updateAllPanels();
-          updateAllNotes();
-        });
-        pageNav.appendChild(btn);
+      function loadSavedWords() {
+        const saved = localStorage.getItem("usRandomWords");
+        if (saved) {
+          usRandomWords = JSON.parse(saved);
+          updateUSWords();
+        }
       }
-      navRow.appendChild(pageNav);
 
-      if (containerId === "usPages" && pageIndex === 1) {
-        const newGameWrapper = document.createElement("div");
-        const newGameBtn = document.createElement("button");
-        newGameBtn.className = "new-game-btn";
-        newGameBtn.textContent = "↻";
-        newGameWrapper.appendChild(newGameBtn);
-        navRow.appendChild(newGameWrapper);
+      function updateUSWords() {
+        document.querySelectorAll("#usPages .page").forEach((page) => {
+          page.querySelectorAll(".panel-bottom").forEach((pb, i) => {
+            pb.textContent = usRandomWords[i] || "";
+          });
+        });
+      }
 
-        // Hook modal
+      function createTopBox(pageIndex, containerId) {
+        const topBox = document.createElement("div");
+        topBox.className = "top-box";
+        const navRow = document.createElement("div");
+        navRow.className = "nav-row";
+
+        const pageNav = document.createElement("div");
+        pageNav.className = "page-nav";
+        for (let i = 0; i < 8; i++) {
+          const btn = document.createElement("button");
+          btn.textContent = i + 1;
+          btn.addEventListener("click", () => {
+            currentPage = i;
+            updatePagePosition();
+            updateAllNavs();
+            updateAllPanels();
+            updateAllNotes();
+          });
+          pageNav.appendChild(btn);
+        }
+        navRow.appendChild(pageNav);
+
+        const modeNav = document.createElement("div");
+        modeNav.className = "mode-nav";
+        const usBtn = document.createElement("button");
+        usBtn.textContent = "US";
+        if (containerId === "usPages") usBtn.classList.add("active");
+        usBtn.addEventListener("click", () => switchMode("us"));
+        const themBtn = document.createElement("button");
+        themBtn.textContent = "THEM";
+        if (containerId === "themPages") themBtn.classList.add("active");
+        themBtn.addEventListener("click", () => switchMode("them"));
+        modeNav.appendChild(usBtn);
+        modeNav.appendChild(themBtn);
+        navRow.appendChild(modeNav);
+
+        topBox.appendChild(navRow);
+
+        const textInputs = [],
+          numberInputsGuess = [],
+          numberInputsConf = [];
+
+        function maybeCopyToThem() {
+          if (containerId !== "usPages") return;
+          const themPages = document.getElementById("themPages");
+          const themPage = themPages && themPages.children[pageIndex - 1];
+          if (!themPage) return;
+
+          const allConfFilled = numberInputsConf.every(
+            (input) => input.value.trim() !== ""
+          );
+          if (!allConfFilled) return;
+
+          const themTextInputs = themPage.querySelectorAll(
+            ".top-box input[type='text']"
+          );
+          themTextInputs.forEach((input, i) => {
+            input.value = (textInputs[i] && textInputs[i].value.trim()) || "";
+            input.readOnly = true;
+            input.classList.add("copied-word");
+            input.dispatchEvent(new Event("input", { bubbles: true }));
+          });
+
+          const themNumberInputsGuess = themPage.querySelectorAll(
+            ".top-box .row input[type='number']:nth-of-type(1)"
+          );
+          themNumberInputsGuess.forEach((input) => {
+            input.disabled = false;
+            input.dataset.copied = "1";
+          });
+          copiedToThemPages.add(pageIndex);
+        }
+
+        for (let i = 0; i < 3; i++) {
+          const row = document.createElement("div");
+          row.className = "row";
+
+          const textInput = document.createElement("input");
+          textInput.type = "text";
+          textInput.placeholder = containerId === "themPages" ? "" : "Word";
+          // US fields editable, THEM fields always readOnly
+          if (containerId === "themPages") {
+            textInput.readOnly = true;
+            textInput.tabIndex = -1;
+          } else {
+            textInput.readOnly = false;
+            textInput.removeAttribute("tabindex");
+          }
+          row.appendChild(textInput);
+          textInputs.push(textInput);
+
+          const numberInputGuess = document.createElement("input");
+          numberInputGuess.type = "number";
+          numberInputGuess.min = 1;
+          numberInputGuess.max = 4;
+          numberInputGuess.inputMode = "numeric";
+          numberInputGuess.style.fontSize = "16px";
+          numberInputGuess.disabled = true;
+          row.appendChild(numberInputGuess);
+          numberInputsGuess.push(numberInputGuess);
+
+          const numberInputConf = document.createElement("input");
+          numberInputConf.type = "number";
+          numberInputConf.min = 1;
+          numberInputConf.max = 4;
+          numberInputConf.inputMode = "numeric";
+          numberInputConf.style.fontSize = "16px";
+          numberInputConf.disabled = true;
+          row.appendChild(numberInputConf);
+          numberInputsConf.push(numberInputConf);
+
+          // Aggiorna i pannelli se la parola è già stata assegnata a un pannello (conf presente)
+          textInput.addEventListener("input", () => {
+            const allTextFilled = textInputs.every(
+              (t) => t.value.trim() !== ""
+            );
+            numberInputsGuess.forEach((num) => (num.disabled = !allTextFilled));
+
+            const allGuessFilled = numberInputsGuess.every(
+              (n) => n.value.trim() !== "" && !isNaN(parseInt(n.value))
+            );
+            numberInputsConf.forEach((num) => (num.disabled = !allGuessFilled));
+
+            // Se esiste un conf valido per questa riga, aggiorna collectedWords per il pannello corrispondente
+            const confVal =
+              numberInputConf.value && numberInputConf.value.trim();
+            const panelIndex = confVal ? parseInt(confVal, 10) - 1 : -1;
+            if (panelIndex >= 0 && panelIndex < 4) {
+              const mode = containerId === "usPages" ? "us" : "them";
+              const newWord = textInput.value.trim();
+              const arr = collectedWords[mode][panelIndex];
+              // usa indice 0-based per fromPage (pageIndex è 1-based qui)
+              const pageIdx0 = pageIndex - 1;
+              const existing = arr.find((it) => it.fromPage === pageIdx0);
+              if (existing) {
+                existing.word = newWord;
+              } else if (newWord) {
+                // evita duplicati: rimuovi eventuali vecchie occorrenze dalla stessa page
+                for (let k = 0; k < 4; k++) {
+                  collectedWords[mode][k] = collectedWords[mode][k].filter(
+                    (item) => item.fromPage !== pageIdx0
+                  );
+                }
+                collectedWords[mode][panelIndex].push({
+                  word: newWord,
+                  fromPage: pageIdx0,
+                });
+              }
+              updateAllPanels();
+
+              // Se siamo in US e la pagina è stata copiata in THEM, aggiorna anche il campo THEM corrispondente
+              if (
+                containerId === "usPages" &&
+                copiedToThemPages.has(pageIndex)
+              ) {
+                const themPages = document.getElementById("themPages");
+                const themPage = themPages && themPages.children[pageIndex - 1];
+                if (themPage) {
+                  const themTextInputs = themPage.querySelectorAll(
+                    ".top-box input[type='text']"
+                  );
+                  const themInput = themTextInputs[i];
+                  if (themInput) {
+                    themInput.value = newWord;
+                    themInput.readOnly = true;
+                    themInput.classList.add("copied-word");
+                    // dispatch input so any THEM listeners run and keep guess state consistent
+                    themInput.dispatchEvent(
+                      new Event("input", { bubbles: true })
+                    );
+                  }
+                }
+              }
+            }
+          });
+
+          numberInputGuess.addEventListener("input", () => {
+            const allGuessFilled = numberInputsGuess.every(
+              (n) => n.value.trim() !== "" && !isNaN(parseInt(n.value))
+            );
+            numberInputsConf.forEach((num) => (num.disabled = !allGuessFilled));
+          });
+
+          numberInputConf.addEventListener("input", () => {
+            const allConfFilled = numberInputsConf.every(
+              (input) => input.value.trim() !== ""
+            );
+            if (allConfFilled) {
+              maybeCopyToThem();
+            }
+          });
+
+          [numberInputGuess, numberInputConf].forEach((numInput) => {
+            numInput.addEventListener("blur", () => {
+              const value = parseInt(numInput.value, 10);
+              if (isNaN(value) || value < 1 || value > 4) {
+                numInput.value = "";
+                const allGuessFilled = numberInputsGuess.every(
+                  (n) => n.value.trim() !== "" && !isNaN(parseInt(n.value))
+                );
+                numberInputsConf.forEach(
+                  (num) => (num.disabled = !allGuessFilled)
+                );
+              }
+            });
+          });
+
+          numberInputConf.addEventListener("change", () => {
+            const word = textInput.value.trim();
+            const panelIndex = parseInt(numberInputConf.value) - 1;
+            if (word && panelIndex >= 0 && panelIndex < 4) {
+              // usa addOrMoveWord per comportamento consistente
+              addOrMoveWord(word, panelIndex);
+            }
+          });
+
+          topBox.appendChild(row);
+        }
+        return topBox;
+      }
+
+      function createGrid() {
+        const grid = document.createElement("div");
+        grid.className = "grid";
+        for (let i = 0; i < 4; i++) {
+          const panel = document.createElement("div");
+          panel.className = "panel";
+          panel.setAttribute("data-panel", i + 1);
+          const panelTop = document.createElement("div");
+          panelTop.className = "panel-top";
+          const ul = document.createElement("ul");
+          panelTop.appendChild(ul);
+          const panelBottom = document.createElement("div");
+          panelBottom.className = "panel-bottom";
+          panelBottom.dataset.panelIndex = i;
+          panel.appendChild(panelTop);
+          panel.appendChild(panelBottom);
+          grid.appendChild(panel);
+        }
+        return grid;
+      }
+
+      function buildPages(containerId) {
+        const container = document.getElementById(containerId);
+        container.innerHTML = "";
+        for (let p = 1; p <= 8; p++) {
+          const page = document.createElement("div");
+          page.className = "page";
+          page.appendChild(createTopBox(p, containerId));
+          page.appendChild(createGrid());
+          container.appendChild(page);
+        }
+      }
+
+      function updatePagePosition() {
+        document.getElementById(
+          currentMode + "Pages"
+        ).style.transform = `translateX(-${currentPage * 100}%)`;
+      }
+      function updateAllNavs() {
+        document.querySelectorAll(".page-nav").forEach((nav) => {
+          nav.querySelectorAll("button").forEach((btn, i) => {
+            btn.classList.toggle("active", i === currentPage);
+          });
+        });
+      }
+      function addOrMoveWord(word, newPanelIndex) {
+        for (let i = 0; i < 4; i++) {
+          collectedWords[currentMode][i] = collectedWords[currentMode][
+            i
+          ].filter(
+            (item) => !(item.word === word && item.fromPage === currentPage)
+          );
+        }
+        collectedWords[currentMode][newPanelIndex].push({
+          word,
+          fromPage: currentPage,
+        });
+        updateAllPanels();
+      }
+      function updateAllPanels() {
+        document
+          .querySelectorAll(`#${currentMode}Pages .page`)
+          .forEach((page, pageIndex) => {
+            page.querySelectorAll(".grid").forEach((grid) => {
+              grid.querySelectorAll(".panel").forEach((panel, i) => {
+                const ul = panel.querySelector(".panel-top ul");
+                ul.innerHTML = "";
+                collectedWords[currentMode][i]
+                  .filter((item) => item.fromPage <= pageIndex)
+                  .forEach((item) => {
+                    const li = document.createElement("li");
+                    li.textContent = item.word;
+                    ul.appendChild(li);
+                  });
+                adjustPanelFont(panel.querySelector(".panel-top"));
+              });
+            });
+          });
+      }
+
+      function adjustPanelFont(panelTop) {
+        let fontSize = 16;
+        panelTop.style.fontSize = fontSize + "px";
+        while (panelTop.scrollHeight > panelTop.clientHeight && fontSize > 10) {
+          fontSize--;
+          panelTop.style.fontSize = fontSize + "px";
+        }
+      }
+
+      function updateAllNotes() {
+        document
+          .querySelectorAll(`#${currentMode}Pages .page`)
+          .forEach((page, pageIndex) => {
+            page
+              .querySelectorAll(".panel-bottom")
+              .forEach((panelBottom, panelIndex) => {
+                if (currentMode === "us") {
+                  panelBottom.textContent = usRandomWords[panelIndex] || "";
+                  return;
+                }
+                panelBottom.innerHTML = "";
+                manualNotes[currentMode][panelIndex]
+                  .filter((note) => note.fromPage <= pageIndex)
+                  .forEach((note) => {
+                    const wrapper = document.createElement("div");
+                    wrapper.className = "note-item";
+                    const span = document.createElement("span");
+                    span.textContent = note.text;
+                    if (note.done) span.classList.add("strikethrough");
+                    const checkBtn = document.createElement("button");
+                    checkBtn.textContent = "✔";
+                    checkBtn.addEventListener("click", () => {
+                      note.done = !note.done;
+                      updateAllNotes();
+                    });
+                    const deleteBtn = document.createElement("button");
+                    deleteBtn.textContent = "✖";
+                    deleteBtn.addEventListener("click", () => {
+                      manualNotes[currentMode][panelIndex] = manualNotes[
+                        currentMode
+                      ][panelIndex].filter((n) => n !== note);
+                      updateAllNotes();
+                    });
+                    wrapper.appendChild(span);
+                    wrapper.appendChild(checkBtn);
+                    wrapper.appendChild(deleteBtn);
+                    panelBottom.appendChild(wrapper);
+                  });
+                const inputWrapper = document.createElement("div");
+                inputWrapper.className = "note-input";
+                const input = document.createElement("input");
+                input.type = "text";
+                input.placeholder = "Type here...";
+                input.enterKeyHint = "done";
+                input.addEventListener("keydown", (e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    const text = input.value.trim();
+                    if (text) {
+                      manualNotes[currentMode][panelIndex].push({
+                        text,
+                        fromPage: currentPage,
+                        done: false,
+                      });
+                      updateAllNotes();
+                    }
+                  }
+                });
+                inputWrapper.appendChild(input);
+                panelBottom.appendChild(inputWrapper);
+              });
+          });
+      }
+
+      function switchMode(mode) {
+        lastPageByMode[currentMode] = currentPage;
+        if (mode === "us") {
+          document.body.classList.remove("them");
+          document.getElementById("usPages").style.display = "flex";
+          document.getElementById("themPages").style.display = "none";
+          currentMode = "us";
+        } else {
+          document.body.classList.add("them");
+          document.getElementById("usPages").style.display = "none";
+          document.getElementById("themPages").style.display = "flex";
+          currentMode = "them";
+        }
+        currentPage = lastPageByMode[currentMode] || 0;
+        updatePagePosition();
+        updateAllNavs();
+        updateAllPanels();
+        updateAllNotes();
+        document
+          .querySelectorAll(".mode-nav button")
+          .forEach((btn) => btn.classList.remove("active"));
+        document.querySelectorAll(".mode-nav").forEach((nav) => {
+          if (mode === "us")
+            nav.querySelector("button:first-child").classList.add("active");
+          else nav.querySelector("button:last-child").classList.add("active");
+        });
+        // Hide Code button in THEM mode, show in US mode
+        const codeBtn = document.querySelector(
+          ".bottom-nav button:nth-child(4)"
+        );
+        if (mode === "them") {
+          codeBtn.style.display = "none";
+          resetBtn.style.display = "none";
+        } else {
+          codeBtn.style.display = "flex";
+          resetBtn.style.display = "flex";
+        }
+      }
+
+      window.addEventListener("DOMContentLoaded", () => {
+        buildPages("usPages");
+        buildPages("themPages");
+        updatePagePosition();
+        updateAllNavs();
+        updateAllPanels();
+        updateAllNotes();
+        loadWordlist();
+        loadSavedWords();
+        loadCodes(); // instead of generateAllCodes()
+
+        //generateAllCodes(); // genera 8 codici unici all'avvio
+        const codeBtn = document.querySelector(
+          ".bottom-nav button:nth-child(4)" // bottone Code
+        );
+        const codeModal = document.getElementById("codeModal");
+        const codeSequence = document.getElementById("codeSequence");
+
+        function showCode() {
+          codeSequence.textContent = pageCodes[currentPage];
+          // Build word row from the 4 panel bottoms (US words)
+          const codeWords = document.getElementById("codeWords");
+          codeWords.innerHTML = "";
+          document
+            .querySelectorAll(
+              `#usPages .page:nth-child(${currentPage + 1}) .panel-bottom`
+            )
+            .forEach((pb) => {
+              const span = document.createElement("span");
+              span.textContent = pb.textContent || "";
+              codeWords.appendChild(span);
+            });
+
+          codeModal.style.display = "block";
+        }
+        function hideCode() {
+          codeModal.style.display = "none";
+        }
+
+        codeBtn.addEventListener("mousedown", showCode);
+        codeBtn.addEventListener("mouseup", hideCode);
+        codeBtn.addEventListener("mouseleave", hideCode);
+
+        codeBtn.addEventListener("touchstart", (e) => {
+          e.preventDefault();
+          showCode();
+        });
+        codeBtn.addEventListener("touchend", hideCode);
+
+        const resetBtn = document.getElementById("resetBtn");
         const modal = document.getElementById("confirmModal");
         const overlay = document.getElementById("modalOverlay");
         const yesBtn = modal.querySelector(".yes");
         const noBtn = modal.querySelector(".no");
 
-        const originalNewGame = newGame;
-        newGameBtn.onclick = () => {
+        resetBtn.addEventListener("click", () => {
           modal.style.display = "block";
           overlay.style.display = "block";
-        };
-
-        yesBtn.onclick = () => {
+        });
+        yesBtn.addEventListener("click", () => {
           modal.style.display = "none";
           overlay.style.display = "none";
-          originalNewGame();
-        };
 
-        noBtn.onclick = () => {
-          modal.style.display = "none";
-          overlay.style.display = "none";
-        };
-      }
-
-      const modeNav = document.createElement('div');
-      modeNav.className = 'mode-nav';
-      const usBtn = document.createElement('button');
-      usBtn.textContent = "US";
-      if (containerId === "usPages") usBtn.classList.add('active');
-      usBtn.addEventListener('click', () => switchMode('us'));
-      const themBtn = document.createElement('button');
-      themBtn.textContent = "THEM";
-      if (containerId === "themPages") themBtn.classList.add('active');
-      themBtn.addEventListener('click', () => switchMode('them'));
-      modeNav.appendChild(usBtn);
-      modeNav.appendChild(themBtn);
-      navRow.appendChild(modeNav);
-
-      topBox.appendChild(navRow);
-
-      for (let i = 0; i < 3; i++) {
-        const row = document.createElement('div');
-        row.className = 'row';
-
-        const textInput = document.createElement('input');
-        textInput.type = 'text';
-        textInput.placeholder = 'Word';
-        textInput.enterKeyHint = "done";
-        textInput.style.fontSize = "16px";
-        row.appendChild(textInput);
-
-        let confirmed = false;
-        textInput.addEventListener('keydown', (e) => {
-          if (e.key === "Enter") {
-            e.preventDefault();
-            confirmed = true;
-            textInput.blur();
-          }
-        });
-        textInput.addEventListener('blur', () => {
-          if (!confirmed) {
-            textInput.value = "";
-          }
-          confirmed = false;
-        });
-
-        const numberInput1 = document.createElement('input');
-        numberInput1.type = 'number';
-        numberInput1.min = 1;
-        numberInput1.max = 4;
-        numberInput1.inputMode = "numeric";
-        numberInput1.style.fontSize = "16px";
-        row.appendChild(numberInput1);
-
-        const numberInput2 = document.createElement('input');
-        numberInput2.type = 'number';
-        numberInput2.min = 1;
-        numberInput2.max = 4;
-        numberInput2.inputMode = "numeric";
-        numberInput2.style.fontSize = "16px";
-        row.appendChild(numberInput2);
-
-        [numberInput1, numberInput2].forEach(numInput => {
-          numInput.addEventListener("blur", () => {
-            const value = parseInt(numInput.value, 10);
-            if (isNaN(value) || value < 1 || value > 4) {
-              numInput.value = "";
-            }
-          });
-        });
-
-        numberInput2.addEventListener('change', () => {
-          const word = textInput.value.trim();
-          const panelIndex = parseInt(numberInput2.value) - 1;
-          if (word && panelIndex >= 0 && panelIndex < 4) {
-            addOrMoveWord(word, panelIndex);
-          }
-        });
-
-        topBox.appendChild(row);
-      }
-      return topBox;
-    }
-
-    function createGrid(pageIndex) {
-      const grid = document.createElement('div');
-      grid.className = 'grid';
-      for (let i = 0; i < 4; i++) {
-        const panel = document.createElement('div');
-        panel.className = 'panel';
-        panel.setAttribute('data-panel', i + 1);
-
-        const panelTop = document.createElement('div');
-        panelTop.className = 'panel-top';
-        const ul = document.createElement('ul');
-        panelTop.appendChild(ul);
-
-        const panelBottom = document.createElement('div');
-        panelBottom.className = 'panel-bottom';
-        panelBottom.dataset.panelIndex = i;
-
-        grid.appendChild(panel);
-        panel.appendChild(panelTop);
-        panel.appendChild(panelBottom);
-      }
-      return grid;
-    }
-
-    function buildPages(containerId) {
-      const container = document.getElementById(containerId);
-      container.innerHTML = '';
-      for (let p = 1; p <= 8; p++) {
-        const page = document.createElement('div');
-        page.className = 'page';
-        page.appendChild(createTopBox(p, containerId));
-        page.appendChild(createGrid(p - 1));
-        container.appendChild(page);
-      }
-    }
-
-    let currentPage = 0;
-    let currentMode = 'us';
-    const lastPageByMode = { us: 0, them: 0 };
-
-    function updatePagePosition() {
-      const container = document.getElementById(currentMode + 'Pages');
-      container.style.transform = `translateX(-${currentPage * 100}%)`;
-    }
-
-    function updateAllNavs() {
-      document.querySelectorAll('.page-nav').forEach(nav => {
-        nav.querySelectorAll('button').forEach((btn, i) => {
-          btn.classList.toggle('active', i === currentPage);
-        });
-      });
-    }
-
-    function addOrMoveWord(word, newPanelIndex) {
-      for (let i = 0; i < 4; i++) {
-        collectedWords[currentMode][i] = collectedWords[currentMode][i].filter(
-          item => !(item.word === word && item.fromPage === currentPage)
-        );
-      }
-      collectedWords[currentMode][newPanelIndex].push({ word, fromPage: currentPage });
-      updateAllPanels();
-    }
-
-    function updateAllPanels() {
-      document.querySelectorAll(`#${currentMode}Pages .page`).forEach((page, pageIndex) => {
-        const grids = page.querySelectorAll('.grid');
-        grids.forEach(grid => {
-          grid.querySelectorAll('.panel').forEach((panel, i) => {
-            const ul = panel.querySelector('.panel-top ul');
-            ul.innerHTML = '';
-            collectedWords[currentMode][i]
-              .filter(item => item.fromPage <= pageIndex)
-              .forEach(item => {
-                const li = document.createElement('li');
-                li.textContent = item.word;
-                ul.appendChild(li);
-              });
-          });
-        });
-      });
-    }
-
-    function updateAllNotes() {
-      document.querySelectorAll(`#${currentMode}Pages .page`).forEach((page, pageIndex) => {
-        page.querySelectorAll('.panel-bottom').forEach((panelBottom, panelIndex) => {
-          if (currentMode === "us") {
-            panelBottom.textContent = usRandomWords[panelIndex] || "";
-            return;
-          }
-
-          panelBottom.innerHTML = '';
-
-          manualNotes[currentMode][panelIndex]
-            .filter(note => note.fromPage <= pageIndex)
-            .forEach(note => {
-              const wrapper = document.createElement('div');
-              wrapper.className = 'note-item';
-
-              const span = document.createElement('span');
-              span.textContent = note.text;
-              if (note.done) span.classList.add('strikethrough');
-
-              const checkBtn = document.createElement('button');
-              checkBtn.textContent = '✔';
-              checkBtn.addEventListener('click', () => {
-                note.done = !note.done;
-                updateAllNotes();
-              });
-
-              const deleteBtn = document.createElement('button');
-              deleteBtn.textContent = '✖';
-              deleteBtn.addEventListener('click', () => {
-                manualNotes[currentMode][panelIndex] =
-                  manualNotes[currentMode][panelIndex].filter(n => n !== note);
-                updateAllNotes();
-              });
-
-              wrapper.appendChild(span);
-              wrapper.appendChild(checkBtn);
-              wrapper.appendChild(deleteBtn);
-              panelBottom.appendChild(wrapper);
+          // --- Clear all text inputs (keep readonly for copied words) ---
+          document
+            .querySelectorAll(
+              "#usPages .top-box input[type='text'], #themPages .top-box input[type='text']"
+            )
+            .forEach((input) => {
+              input.value = "";
+              input.classList.remove("copied-word");
             });
 
-          const inputWrapper = document.createElement('div');
-          inputWrapper.className = 'note-input';
+          // --- Clear all number inputs ---
+          document
+            .querySelectorAll(
+              "#usPages .top-box input[type='number'], #themPages .top-box input[type='number']"
+            )
+            .forEach((input) => {
+              input.value = "";
+              input.disabled = true;
+              delete input.dataset.copied;
+            });
 
-          const input = document.createElement('input');
-          input.type = 'text';
-          input.placeholder = 'Type here...';
-          input.enterKeyHint = "done";
-          input.style.fontSize = "16px";
-
-          input.addEventListener('keydown', (e) => {
-            if (e.key === "Enter") {
-              e.preventDefault();
-              const text = input.value.trim();
-              if (text) {
-                manualNotes[currentMode][panelIndex].push({
-                  text,
-                  fromPage: currentPage,
-                  done: false
-                });
-                updateAllNotes();
-              }
+          // --- Clear collected words and manual notes ---
+          for (let mode of ["us", "them"]) {
+            for (let i = 0; i < 4; i++) {
+              collectedWords[mode][i] = [];
+              manualNotes[mode][i] = [];
             }
-          });
+          }
 
-          inputWrapper.appendChild(input);
-          panelBottom.appendChild(inputWrapper);
+          // --- Clear copied pages tracker ---
+          copiedToThemPages.clear();
+
+          // --- Generate new codes for 8 pages ---
+          generateAllCodes();
+
+          // --- Update all panels and notes for both modes ---
+          const prevMode = currentMode;
+          ["us", "them"].forEach((mode) => {
+            currentMode = mode;
+            updateAllPanels();
+          });
+          currentMode = prevMode;
+          updateAllNotes();
+
+          // --- Reset US words ---
+          usRandomWords = [];
+          if (wordlist.length >= 4) {
+            const shuffled = [...wordlist].sort(() => 0.5 - Math.random());
+            usRandomWords = shuffled.slice(0, 4);
+            localStorage.setItem(
+              "usRandomWords",
+              JSON.stringify(usRandomWords)
+            );
+            updateUSWords();
+          }
+
+          // --- Reset current page and mode display ---
+          currentMode = "us";
+          currentPage = 0;
+          lastPageByMode.us = 0;
+          lastPageByMode.them = 0;
+          document.body.classList.remove("them");
+          document.getElementById("usPages").style.display = "flex";
+          document.getElementById("themPages").style.display = "none";
+          updatePagePosition();
+          updateAllNavs();
+
+          // --- Set US button active ---
+          document
+            .querySelectorAll(".mode-nav button")
+            .forEach((btn) => btn.classList.remove("active"));
+          document.querySelectorAll(".mode-nav").forEach((nav) => {
+            nav.querySelector("button:first-child").classList.add("active");
+          });
+        });
+        noBtn.addEventListener("click", () => {
+          modal.style.display = "none";
+          overlay.style.display = "none";
         });
       });
-    }
-
-    function switchMode(mode) {
-      lastPageByMode[currentMode] = currentPage;
-
-      if (mode === 'us') {
-        document.body.classList.remove('them');
-        document.getElementById('usPages').style.display = 'flex';
-        document.getElementById('themPages').style.display = 'none';
-        currentMode = 'us';
-      } else {
-        document.body.classList.add('them');
-        document.getElementById('usPages').style.display = 'none';
-        document.getElementById('themPages').style.display = 'flex';
-        currentMode = 'them';
+      function generateUniqueSequence() {
+        const numbers = [1, 2, 3, 4];
+        // Mischia e prendi 3 numeri unici
+        for (let i = numbers.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [numbers[i], numbers[j]] = [numbers[j], numbers[i]];
+        }
+        return numbers.slice(0, 3).join(".");
       }
 
-      currentPage = lastPageByMode[currentMode] || 0;
+      window.addEventListener("DOMContentLoaded", () => {
+        const codeBtn = document.querySelector(
+          ".bottom-nav button:nth-child(4)" // il quarto bottone = Code
+        );
+        const codeModal = document.getElementById("codeModal");
+        const codeSequence = document.getElementById("codeSequence");
 
-      updatePagePosition();
-      updateAllNavs();
-      updateAllPanels();
-      updateAllNotes();
+        // Mostra la sequenza solo mentre tieni premuto
+        codeBtn.addEventListener("mousedown", () => {
+          //codeSequence.textContent = generateUniqueSequence();
+          codeModal.style.display = "block";
+        });
+        codeBtn.addEventListener("mouseup", () => {
+          codeModal.style.display = "none";
+        });
+        codeBtn.addEventListener("mouseleave", () => {
+          codeModal.style.display = "none";
+        });
 
-      document.querySelectorAll('.mode-nav button').forEach(btn => btn.classList.remove('active'));
-      document.querySelectorAll('.mode-nav').forEach(nav => {
-        if (mode === 'us') nav.querySelector('button:first-child').classList.add('active');
-        else nav.querySelector('button:last-child').classList.add('active');
+        // Touch support (mobile)
+        codeBtn.addEventListener("touchstart", (e) => {
+          e.preventDefault(); // evita click duplicati
+          //codeSequence.textContent = generateUniqueSequence();
+          codeModal.style.display = "block";
+        });
+        codeBtn.addEventListener("touchend", () => {
+          codeModal.style.display = "none";
+        });
       });
-    }
+    </script>
 
-    window.addEventListener('DOMContentLoaded', () => {
-      buildPages('usPages');
-      buildPages('themPages');
-      updatePagePosition();
-      updateAllNavs();
-      updateAllPanels();
-      updateAllNotes();
-      loadWordlist();
-      loadSavedWords();
-    });
-  </script>
-</body>
+    <nav class="bottom-nav">
+      <button id="resetBtn">
+        <div class="icon">
+          <img src="assets/imgs/reset.png" alt="Reset Icon" />
+        </div>
+        <span>Reset</span>
+      </button>
+      <button>
+        <div class="icon">
+          <img src="assets/imgs/chat.png" alt="Chat Icon" />
+        </div>
+        <span>Chat</span>
+      </button>
+      <button>
+        <div class="icon"><img src="assets/imgs/id.png" alt="ID Icon" /></div>
+        <span>ID</span>
+      </button>
+      <button>
+        <div class="icon">
+          <img src="assets/imgs/code.png" alt="Code Icon" />
+        </div>
+        <span>Code</span>
+      </button>
+      <button>
+        <div class="icon">
+          <img src="assets/imgs/log.png" alt="Logs Icon" />
+        </div>
+        <span>Logs</span>
+      </button>
+    </nav>
+  </body>
 </html>
