@@ -293,16 +293,25 @@
       }
       .codeWords {
         display: flex;
-        gap: 6px;
+        gap: 12px;
         justify-content: center;
         margin-bottom: 12px;
-        font-size: 16px;
-        font-weight: 400;
+        /* font-size: 16px;
+        font-weight: 400; */
       }
       #codeWords span {
-        padding: 4px;
-        background: #b9efff;
-        border-radius: 6px;
+        font-size: 16px;
+        font-weight: 600;
+        background: #007bff;
+        color: #fff;
+        padding: 6px 10px;
+        border-radius: 8px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+      }
+      /* Style for temporary code hint placeholders */
+      input.code-hint::placeholder {
+        font-style: italic;
+        color: #888;
       }
     </style>
   </head>
@@ -324,6 +333,8 @@
     </div>
 
     <script>
+      let showWordsInModal = false; // toggle: true = show words, false = hide words
+
       const collectedWords = { us: [[], [], [], []], them: [[], [], [], []] };
       const manualNotes = { us: [[], [], [], []], them: [[], [], [], []] };
       let wordlist = [],
@@ -841,26 +852,79 @@
         const codeSequence = document.getElementById("codeSequence");
 
         function showCode() {
-          codeSequence.textContent = pageCodes[currentPage];
-          // Build word row from the 4 panel bottoms (US words)
-          const codeWords = document.getElementById("codeWords");
-          codeWords.innerHTML = "";
-          document
-            .querySelectorAll(
-              `#usPages .page:nth-child(${currentPage + 1}) .panel-bottom`
-            )
-            .forEach((pb) => {
-              const span = document.createElement("span");
-              span.textContent = pb.textContent || "";
-              codeWords.appendChild(span);
+          const code = pageCodes[currentPage]; // e.g. "3.1.4"
+          codeSequence.textContent = code;
+
+          // --- Build code words for modal (only if enabled) ---
+          if (showWordsInModal) {
+            const codeWords = document.getElementById("codeWords");
+            codeWords.innerHTML = "";
+            const indices = code.split(".").map((n) => parseInt(n, 10));
+
+            indices.forEach((num) => {
+              const pb = document.querySelector(
+                `#usPages .page:nth-child(${
+                  currentPage + 1
+                }) .panel-bottom[data-panel-index="${num - 1}"]`
+              );
+              if (pb) {
+                const span = document.createElement("span");
+                span.textContent = pb.textContent || "";
+                codeWords.appendChild(span);
+              }
             });
+          }
 
           codeModal.style.display = "block";
-        }
-        function hideCode() {
-          codeModal.style.display = "none";
+
+          // --- Apply placeholders only on current US page ---
+          if (currentMode === "us") {
+            const pageEl = document.querySelector(
+              `#usPages .page:nth-child(${currentPage + 1})`
+            );
+            const inputs = pageEl.querySelectorAll(
+              '.top-box .row input[type="text"]'
+            );
+
+            const indices = code.split(".").map((n) => parseInt(n, 10));
+            inputs.forEach((input, i) => {
+              if (i < indices.length) {
+                const pb = pageEl.querySelector(
+                  `.panel-bottom[data-panel-index="${indices[i] - 1}"]`
+                );
+                if (pb) {
+                  input.dataset.originalPlaceholder = input.placeholder;
+                  if (input.value.trim() === "") {
+                    input.placeholder = pb.textContent.trim();
+                    input.classList.add("code-hint");
+                  }
+                }
+              }
+            });
+          }
         }
 
+        function hideCode() {
+          codeModal.style.display = "none";
+
+          // --- Restore placeholders when modal closes ---
+          if (currentMode === "us") {
+            const pageEl = document.querySelector(
+              `#usPages .page:nth-child(${currentPage + 1})`
+            );
+            const inputs = pageEl.querySelectorAll(
+              '.top-box .row input[type="text"]'
+            );
+
+            inputs.forEach((input) => {
+              if (input.dataset.originalPlaceholder !== undefined) {
+                input.placeholder = input.dataset.originalPlaceholder;
+                delete input.dataset.originalPlaceholder;
+              }
+              input.classList.remove("code-hint"); // remove hint styling
+            });
+          }
+        }
         codeBtn.addEventListener("mousedown", showCode);
         codeBtn.addEventListener("mouseup", hideCode);
         codeBtn.addEventListener("mouseleave", hideCode);
