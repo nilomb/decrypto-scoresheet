@@ -23,17 +23,20 @@
         flex-direction: column;
         padding-bottom: env(safe-area-inset-bottom);
       }
+
       .page-wrapper {
         flex: 1;
         position: relative;
         overflow: hidden;
       }
+
       .page-container {
         display: flex;
         width: 100%;
         height: 100%;
         transition: transform 0.3s ease;
       }
+
       .page {
         width: 100%;
         height: 100%;
@@ -44,26 +47,31 @@
         box-sizing: border-box;
         overflow: hidden;
       }
+
       .top-box {
         width: 100%;
         background: #f0f0f0;
         padding: 10px;
         box-sizing: border-box;
       }
+
       body.them .top-box {
         background: #ddd;
         color: #000;
       }
+
       .nav-row {
         display: flex;
         justify-content: space-between;
         margin-bottom: 10px;
         align-items: center;
       }
+
       .page-nav {
         display: flex;
         gap: 3px;
       }
+
       .page-nav button {
         background: #ccc;
         border: none;
@@ -73,15 +81,18 @@
         font-size: 16px;
         transition: background 0.3s, color 0.3s;
       }
+
       .page-nav button.active {
         background: #333;
         color: #fff;
         font-weight: bold;
       }
+
       .mode-nav {
         display: flex;
         gap: 3px;
       }
+
       .mode-nav button {
         padding: 4px 8px;
         border: none;
@@ -91,30 +102,36 @@
         background: #ccc;
         transition: background 0.3s, color 0.3s;
       }
+
       .mode-nav button.active {
         background: #333;
         color: #fff;
       }
+
       .row {
         display: flex;
         justify-content: space-between;
         margin-bottom: 8px;
       }
+
       .row input[type="text"] {
         flex: 1;
         margin-right: 8px;
         padding: 6px;
       }
+
       .row input[type="number"] {
         width: 50px;
         padding: 6px;
         margin-left: 4px;
       }
+
       .top-box input[type="text"],
       .top-box input[type="number"],
       .note-input input {
         font-size: 16px;
       }
+
       .grid {
         flex: 1;
         display: grid;
@@ -125,6 +142,7 @@
         box-sizing: border-box;
         overflow: hidden;
       }
+
       .panel {
         display: flex;
         flex-direction: column;
@@ -134,6 +152,7 @@
         background: #fff;
         position: relative;
       }
+
       .panel::before {
         content: attr(data-panel);
         position: absolute;
@@ -146,22 +165,26 @@
         pointer-events: none;
         white-space: nowrap;
       }
+
       .panel-top {
         flex: 1;
         padding: 6px;
         overflow-y: auto;
       }
+
       .panel-top ul {
         list-style: none;
         padding: 0;
         margin: 0;
       }
+
       .panel-top li {
         padding: 2px 0;
         border-bottom: 1px solid #eee;
         font-size: 16px;
         line-height: 1.2;
       }
+
       .panel-bottom {
         border-top: 1px solid #ddd;
         padding: 4px;
@@ -172,35 +195,42 @@
         font-weight: 500;
         font-size: 18px;
       }
+
       .note-item {
         display: flex;
         align-items: center;
         justify-content: space-between;
         margin-bottom: 4px;
       }
+
       .note-item span {
         flex: 1;
         font-size: 16px;
         text-transform: uppercase;
       }
+
       .note-item span.strikethrough {
         text-decoration: line-through;
       }
+
       .note-item button {
         margin-left: 4px;
         padding: 2px 6px;
         cursor: pointer;
       }
+
       .note-input {
         display: flex;
         gap: 4px;
         margin-top: 4px;
       }
+
       .note-input input {
         flex: 1;
         padding: 4px;
         text-transform: uppercase;
       }
+
       .new-game-btn {
         background: blue;
         color: white;
@@ -214,10 +244,12 @@
         align-items: center;
         justify-content: center;
       }
+
       .new-game-btn:hover {
         background: #0044cc;
         color: #fff;
       }
+
       .modal-overlay {
         display: none;
         position: fixed;
@@ -228,6 +260,7 @@
         background: rgba(0, 0, 0, 0.4);
         z-index: 999;
       }
+
       .modal {
         display: none;
         position: fixed;
@@ -241,6 +274,7 @@
         z-index: 1000;
         text-align: center;
       }
+
       .modal button {
         margin: 10px;
         padding: 6px 14px;
@@ -249,13 +283,16 @@
         border-radius: 6px;
         cursor: pointer;
       }
+
       .modal .yes {
         background: blue;
         color: #fff;
       }
+
       .modal .no {
         background: #ccc;
       }
+
       .bottom-nav {
         position: fixed;
         bottom: 0;
@@ -269,6 +306,7 @@
         align-items: center;
         z-index: 100;
       }
+
       .bottom-nav button {
         flex: 1;
         background: none;
@@ -280,17 +318,20 @@
         color: #333;
         cursor: pointer;
       }
+
       .bottom-nav button .icon {
         font-size: 20px;
         line-height: 1;
         margin-bottom: 2px;
       }
+
       #codeModal {
         display: none;
         padding: 10px 20px;
         font-size: 24px;
         font-weight: bold;
       }
+
       .codeWords {
         display: flex;
         gap: 12px;
@@ -299,6 +340,7 @@
         /* font-size: 16px;
         font-weight: 400; */
       }
+
       #codeWords span {
         font-size: 16px;
         font-weight: 600;
@@ -308,6 +350,7 @@
         border-radius: 8px;
         box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
       }
+
       /* Style for temporary code hint placeholders */
       input.code-hint::placeholder {
         font-style: italic;
@@ -315,6 +358,7 @@
       }
     </style>
   </head>
+
   <body>
     <div class="page-wrapper">
       <div class="page-container" id="usPages"></div>
@@ -335,13 +379,22 @@
     <script>
       let showWordsInModal = false; // toggle: true = show words, false = hide words
 
-      const collectedWords = { us: [[], [], [], []], them: [[], [], [], []] };
-      const manualNotes = { us: [[], [], [], []], them: [[], [], [], []] };
+      const collectedWords = {
+        us: [[], [], [], []],
+        them: [[], [], [], []],
+      };
+      const manualNotes = {
+        us: [[], [], [], []],
+        them: [[], [], [], []],
+      };
       let wordlist = [],
         usRandomWords = [];
       let currentPage = 0,
         currentMode = "us";
-      const lastPageByMode = { us: 0, them: 0 };
+      const lastPageByMode = {
+        us: 0,
+        them: 0,
+      };
 
       // Flag globale per tracciare pagine già copiate in THEM
       const copiedToThemPages = new Set();
@@ -355,6 +408,7 @@
         }
         return numbers.slice(0, 3).join(".");
       }
+
       function generateAllUniqueCodes(count = 8) {
         const codes = new Set();
         while (codes.size < count) {
@@ -387,6 +441,7 @@
           console.error("Could not load wordlist.txt", e);
         }
       }
+
       function loadCodes() {
         const saved = localStorage.getItem("pageCodes");
         if (saved) {
@@ -395,6 +450,7 @@
           generateAllCodes();
         }
       }
+
       function newGame() {
         if (wordlist.length < 4) return;
         const shuffled = [...wordlist].sort(() => 0.5 - Math.random());
@@ -461,35 +517,10 @@
           numberInputsGuess = [],
           numberInputsConf = [];
 
+        // Funzione rimossa: i campi THEM rimangono sempre editabili manualmente
         function maybeCopyToThem() {
-          if (containerId !== "usPages") return;
-          const themPages = document.getElementById("themPages");
-          const themPage = themPages && themPages.children[pageIndex - 1];
-          if (!themPage) return;
-
-          const allConfFilled = numberInputsConf.every(
-            (input) => input.value.trim() !== ""
-          );
-          if (!allConfFilled) return;
-
-          const themTextInputs = themPage.querySelectorAll(
-            ".top-box input[type='text']"
-          );
-          themTextInputs.forEach((input, i) => {
-            input.value = (textInputs[i] && textInputs[i].value.trim()) || "";
-            input.readOnly = true;
-            input.classList.add("copied-word");
-            input.dispatchEvent(new Event("input", { bubbles: true }));
-          });
-
-          const themNumberInputsGuess = themPage.querySelectorAll(
-            ".top-box .row input[type='number']:nth-of-type(1)"
-          );
-          themNumberInputsGuess.forEach((input) => {
-            input.disabled = false;
-            input.dataset.copied = "1";
-          });
-          copiedToThemPages.add(pageIndex);
+          // Funzione disabilitata - i campi THEM devono essere popolati manualmente
+          return;
         }
 
         for (let i = 0; i < 3; i++) {
@@ -498,15 +529,10 @@
 
           const textInput = document.createElement("input");
           textInput.type = "text";
-          textInput.placeholder = containerId === "themPages" ? "" : "Word";
-          // US fields editable, THEM fields always readOnly
-          if (containerId === "themPages") {
-            textInput.readOnly = true;
-            textInput.tabIndex = -1;
-          } else {
-            textInput.readOnly = false;
-            textInput.removeAttribute("tabindex");
-          }
+          textInput.placeholder = containerId === "themPages" ? "Clue" : "Word";
+          // Tutti i campi sono sempre editabili
+          textInput.readOnly = false;
+          textInput.removeAttribute("tabindex");
           row.appendChild(textInput);
           textInputs.push(textInput);
 
@@ -569,29 +595,8 @@
               }
               updateAllPanels();
 
-              // Se siamo in US e la pagina è stata copiata in THEM, aggiorna anche il campo THEM corrispondente
-              if (
-                containerId === "usPages" &&
-                copiedToThemPages.has(pageIndex)
-              ) {
-                const themPages = document.getElementById("themPages");
-                const themPage = themPages && themPages.children[pageIndex - 1];
-                if (themPage) {
-                  const themTextInputs = themPage.querySelectorAll(
-                    ".top-box input[type='text']"
-                  );
-                  const themInput = themTextInputs[i];
-                  if (themInput) {
-                    themInput.value = newWord;
-                    themInput.readOnly = true;
-                    themInput.classList.add("copied-word");
-                    // dispatch input so any THEM listeners run and keep guess state consistent
-                    themInput.dispatchEvent(
-                      new Event("input", { bubbles: true })
-                    );
-                  }
-                }
-              }
+              // Rimossa sincronizzazione automatica con campi THEM
+              // I campi THEM devono essere popolati manualmente
             }
           });
 
@@ -606,9 +611,8 @@
             const allConfFilled = numberInputsConf.every(
               (input) => input.value.trim() !== ""
             );
-            if (allConfFilled) {
-              maybeCopyToThem();
-            }
+            // Rimossa la chiamata automatica a maybeCopyToThem()
+            // I campi them rimangono sempre editabili manualmente
           });
 
           [numberInputGuess, numberInputConf].forEach((numInput) => {
@@ -678,6 +682,7 @@
           currentMode + "Pages"
         ).style.transform = `translateX(-${currentPage * 100}%)`;
       }
+
       function updateAllNavs() {
         document.querySelectorAll(".page-nav").forEach((nav) => {
           nav.querySelectorAll("button").forEach((btn, i) => {
@@ -685,6 +690,7 @@
           });
         });
       }
+
       function addOrMoveWord(word, newPanelIndex) {
         for (let i = 0; i < 4; i++) {
           collectedWords[currentMode][i] = collectedWords[currentMode][
@@ -699,6 +705,7 @@
         });
         updateAllPanels();
       }
+
       function updateAllPanels() {
         document
           .querySelectorAll(`#${currentMode}Pages .page`)
@@ -1029,6 +1036,7 @@
           overlay.style.display = "none";
         });
       });
+
       function generateUniqueSequence() {
         const numbers = [1, 2, 3, 4];
         // Mischia e prendi 3 numeri unici
